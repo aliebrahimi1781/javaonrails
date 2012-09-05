@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roa><!-- spring配置文件名：applicationContext-module-*.xml -->
+<!-- 拦截器的定义将会被继承到子模块，合法的module名由数字、大小写字母、减号、下划线、点号组成 -->
+<!-- package-prefix由 -->
+    <module name="root" extends="">
+        <default-dataType name=""/>
+        <default-errorType name=""/>
+        <default-accessMethod name=""/><!-- C R U D -->
+        
+        <interceptor name="" class="">
+            <param name="" value=""/>
+        </interceptor>
+        <interceptor-stack name="">
+            <interceptor-ref name=""/>
+        </interceptor-stack>
+        <default-interceptor name="" behavior=""/>
+        <!-- behavior:append|prepend|replace，
+                                   分别是在父拦截器后面追加此拦截器作为此处的拦截器，
+                                   在父拦截器前面添加此拦截器作为此处的拦截器，
+                                   用此拦截器替换父拦截器作为此处的拦截器
+                                   如果此处已经是根模块，behavior属性会被忽略
+                                   默认是replace-->
+        <!-- category和resource不具备继承特性，module才有
+                                  合法的category由大小写字母或/+大小写字母开头，由大小写字母、数字、减号、下划线和/构成
+             /作为子分类和父分类的分割符，不能出现两个以上连续的/ -->
+	    <category name="aaaa">
+	        <interceptor-ref name="" behavior="append"/>
+	        
+	        <default-dataType name=""/>
+	        <default-errorType name=""/>
+	        <default-accessMethod name=""/><!-- C R U D -->
+	        
+	        <resource name="">
+	            <interceptor-ref name=""/>
+	            <!-- creatable retrivable updatable deletable可有多个
+	                 default表示此creatable是默认creatable访问方式，
+	                                             每个creatable retrivable updatable deletable最多各有一个默认访问
+	                                             如果有超过一个默认会在加载时抛出异常 -->
+	            <creatable name="" default="true">
+	                <default-dataType name=""/>
+	                <default-errorType name=""/>
+	                <default-accessType name=""/>
+	                
+	                <result name="" class=""/>
+	                
+	                <depending-reources>
+	                <!-- 用英文逗号分隔的完整资源名，完整资源名包括资源分类名和资源名
+	                                                        出现的任何空白符一律忽略 -->
+	                    <![CDATA[]]>
+	                </depending-reources>
+	            </creatable>
+	            <retrivable name=""/>
+	            <updatable name=""/>
+	            <deletable name=""/>
+	            
+	            <result name="" class=""/>
+	            
+	            <default-dataType name=""/>
+	            <default-errorType name=""/>
+	            <default-accessMethod name=""/><!-- C R U D -->
+	
+	            <description>
+	            <![CDATA[对资源的描述]]>
+	            </description>
+	        </resource>
+	        <result name="" class=""/>
+	    </category>
+	    <result name="" class=""/>
+	    <includes src=""/>
+	    <!-- 采用类路径，不同的路径使用逗号分隔，可采用*号作为通配符，可有多个includes节点，所有src属性内出现的所有空白符都被忽略 -->
+    </module>
+</roa>

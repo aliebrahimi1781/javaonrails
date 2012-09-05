@@ -1,0 +1,1 @@
+Cache可以考虑自己实现红黑树或A+树，增加对SoftReference的支持

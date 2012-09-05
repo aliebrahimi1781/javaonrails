@@ -1,0 +1,40 @@
+package me.jor.classloader;
+
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.jar.JarFile;
+
+public class JarFileClassLoader extends AbstractJORClassLoader {
+	private JarFile jar;
+	
+	public JarFileClassLoader(JarFile jar, ClassLoader parent, String startClassName, boolean startClassInCustomPath) {
+		super(parent, startClassName, startClassInCustomPath);
+		this.jar=jar;
+	}
+
+	@Override
+	protected InputStream getBytecodeInputStream(String name) throws IOException {
+		return jar.getInputStream(jar.getJarEntry(super.convertPackagePath(name)));
+	}
+
+	@Override
+	protected URL findJORResource(String name) {
+		InputStream in=null;
+		try {
+			URL url=new URL(new StringBuilder("jar:file:/").append(jar.getName().replace('\\', '/')).append("!/").append(super.convertPackagePath(name)).toString());
+			in=url.openStream();
+			return url;
+		} catch (Exception e) {
+			return null;
+		}finally{
+			if(in!=null){
+				try {
+					in.close();
+				} catch (IOException e) {}
+			}
+		}
+	}
+	
+}
