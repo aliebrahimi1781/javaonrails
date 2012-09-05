@@ -29,6 +29,8 @@ second period, to publish a version depending on an ioc framework, which is impl
 
 at last, this project is modified with eclipse.
 
+java doc charset is utf8.
+
 ======================================================================================================================================================
 SEP 5 2012
 classes in directory meJOR has been tested in my project, except classes on nio and me.jor.pool.ThreadPool.
@@ -38,3 +40,4 @@ also, there are so many small utilities to reduce duplication of work in use of 
 classes in directory meROA provide the module framework, however, this framework could not work yet, i'm afraid, because of some defects in design and lack of test. i'll reconsitution this framework, in the next few weeks.
 
 at last, i should explain that, due to more than a dozon hours of work, i have few time to finish it.
+
