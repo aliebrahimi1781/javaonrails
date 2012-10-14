@@ -39,15 +39,24 @@ public abstract class AbstractJORClassLoader extends SecureClassLoader{
 				}
 			}
 		}finally{
-			in.close();
 			baos.close();
 		}
 	}
 	private byte[] getBytecode(String name) throws IOException{
+		InputStream in=null;
 		if((!name.equals(startClassName)) || startClassInCustomPath){
-			return loadBytecode(getBytecodeInputStream(name));
+			in=getBytecodeInputStream(name);
 		}else{
-			return loadBytecode(super.getParent().getResourceAsStream(convertPackagePath(name)));
+			in=super.getParent().getResourceAsStream(convertPackagePath(name));
+		}
+		if(in!=null){
+			try{
+				return loadBytecode(in);
+			}finally{
+				in.close();
+			}
+		}else{
+			throw new NullPointerException("no class file was found");
 		}
 	}
 	
