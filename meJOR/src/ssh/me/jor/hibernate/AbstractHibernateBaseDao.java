@@ -42,11 +42,7 @@ public abstract class AbstractHibernateBaseDao extends HibernateTemplate impleme
 	 */
 	@Override
 	public <T> Page<T> findPage(Query countQuery, Query findQuery, int page, int pageSize) {
-		Number c=(Number)countQuery.uniqueResult();
-		int count =0;
-		if(c!=null){
-			count=c.intValue();
-		}
+		int count = ((Number)countQuery.uniqueResult()).intValue();
 		if(count>0){
 			if(pageSize<=0){
 				pageSize=count;
