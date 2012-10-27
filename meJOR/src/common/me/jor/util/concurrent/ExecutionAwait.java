@@ -1,7 +1,5 @@
 package me.jor.util.concurrent;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import me.jor.common.Task;
 import me.jor.util.Cache;
 
@@ -24,7 +22,7 @@ import me.jor.util.Cache;
  *               //如果采用一参构造器且实参为false，则等价于采用无参构造器<br/>
  *               //如果是new ExecutionAwait(true, false)，则每次发生并发访问或单线程访问时都会执行一次else，并发的其它线程不会等待而是立即执行if
  *               //如果是new ExecutionAwait(false, false)，则else只会执行一次，以后每次调用只执行if，而且永远不会等待
- *               //每二个参数传入true时，等价于调用单参构造器
+ *               //第二个参数传入true时，等价于调用单参构造器
  *         	   try{<br/>
  *                 //do sth else<br/>
  *             }catch(Exception e){<br/>
@@ -32,7 +30,7 @@ import me.jor.util.Cache;
  *                 await.setThrowable(e);
  *                 //do sth
  *             }finally{<br/>
- *                 await.signal();<br/>
+ *                 await.signal();<br/>//如果单参传true,或双参第一个传true，则在调用signal()后，应使用新的ExecutionAwait对象调用await()<br/>
  *             }<br/>
  *         }<br/>
  *     }<br/>
@@ -40,9 +38,10 @@ import me.jor.util.Cache;
  * */
 public class ExecutionAwait {
 	
-	private AtomicBoolean await;
-	private AtomicBoolean wait;
+	private volatile boolean await;
+	private volatile boolean wait;
 	private volatile boolean reinstate;
+	private volatile boolean signaled;
 	private volatile Throwable throwable;
 	private volatile Object result;
 	
@@ -53,30 +52,41 @@ public class ExecutionAwait {
 		this(reinstate, true);
 	}
 	public ExecutionAwait(boolean reinstate, boolean wait){
-		await=new AtomicBoolean(false);
-		this.wait=new AtomicBoolean(wait);
+		this.await=false;
+		this.wait=wait;
 		this.reinstate=reinstate;
 	}
 	
 	public boolean await() throws InterruptedException{
 		boolean await;
-		synchronized(wait){
-			await=this.await.getAndSet(true);
-			if(await && wait.get()){
-				wait.wait();
+		synchronized(this){
+			await=this.await;
+			this.await=true;
+			if(await && wait){
+				this.wait();
 			}
 		}
 		return await;
 	}
 	public void signal(){
-		synchronized(wait){
-			wait.notifyAll();
+		synchronized(this){
+			this.notifyAll();
 			if(reinstate){
-				this.await.set(false);
+				this.await=false;
 			}else{
-				wait.set(false);
+				this.wait=false;
 			}
+			signaled=true;
 		}
+	}
+	/**
+	 * 判断是否已经调用过
+	 * @exception
+	 * @return boolean
+	 * @see
+	 */
+	public boolean needNewInstance(){
+		return signaled&&reinstate;
 	}
 	private <T> T innerExecute(Task task)throws Throwable{
 		try{
@@ -128,7 +138,13 @@ public class ExecutionAwait {
 	}
 	
 	private static ExecutionAwait getExecutionAwait(String name, boolean reinstate, boolean wait){
-		return (ExecutionAwait)Cache.getCache("me.jor.util.concurrent.ExecutionAwait.getExecutionAwait").putIfAbsent(name, new ExecutionAwait(reinstate,wait));
+		ExecutionAwait await=(ExecutionAwait)Cache.getCache("me.jor.util.concurrent.ExecutionAwait.getExecutionAwait").get(name);
+		if(await==null){
+			await=(ExecutionAwait)Cache.getCache("me.jor.util.concurrent.ExecutionAwait.getExecutionAwait").putIfAbsent(name, new ExecutionAwait(reinstate,wait));
+		}else if(reinstate && await.signaled){
+			await=(ExecutionAwait)Cache.getCache("me.jor.util.concurrent.ExecutionAwait.getExecutionAwait").replace(name, new ExecutionAwait(reinstate,wait));
+		}
+		return await;
 	}
 	public static <T> T execute(String name, boolean reinstate, boolean wait, Task task) throws Throwable{
 		return getExecutionAwait(name, reinstate, wait).execute(task);

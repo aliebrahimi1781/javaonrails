@@ -3,12 +3,17 @@ package me.jor.roa.core;
 import java.util.HashMap;
 import java.util.Map;
 
+import me.jor.common.GlobalObject;
 import me.jor.roa.core.accessable.Result;
 import me.jor.roa.exception.ResultExistingException;
-
+/**
+ * ""为key的是通用Result
+ * the key which is empty string(""), is common Result
+ * @author wujingrun
+ *
+ */
 public class ResultMap implements Result{
 	private Map<String, Result> map=new HashMap<String, Result>();
-	private Result defaultResult;
 	
 	ResultMap(){}
 	
@@ -37,5 +42,10 @@ public class ResultMap implements Result{
 		}else{
 			return null;
 		}
+	}
+
+	@Override
+	public Object getDescription() {
+		return map;
 	}
 }

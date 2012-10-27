@@ -1,7 +1,7 @@
 package me.jor.util.concurrent;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -32,7 +32,7 @@ import me.jor.util.LockCache;
  * 只需要调用静态的executeAndWait(String key, Task task)或executeAndReturnImmediately(String key, Task task)。
  * */
 public class ExecutingOnce implements Task{
-	private static final Map<String, Task> map=new ConcurrentSkipListMap<String, Task>();
+	private static final Map<String, Task> map=new ConcurrentHashMap<String, Task>();
 	private CountDownLatch finished=new CountDownLatch(1);
 	private Task task;
 	private Object result;

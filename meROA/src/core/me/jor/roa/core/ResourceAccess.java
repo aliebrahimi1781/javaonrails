@@ -2,12 +2,13 @@ package me.jor.roa.core;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import me.jor.roa.common.constant.ROAConstant;
 import me.jor.roa.core.accessable.AccessMethod;
+import me.jor.roa.core.accessable.BaseAccess;
 import me.jor.roa.core.accessable.Creatable;
 import me.jor.roa.core.accessable.Deletable;
+import me.jor.roa.core.accessable.Describable;
 import me.jor.roa.core.accessable.Result;
 import me.jor.roa.core.accessable.Retrivable;
 import me.jor.roa.core.accessable.Updatable;
@@ -17,13 +18,20 @@ import me.jor.util.Log4jUtil;
 
 import org.apache.commons.logging.Log;
 
-public class ResourceAccess{
+
+/**
+ * 对应<resource>配置
+ * @author wujingrun
+ *
+ */
+public class ResourceAccess implements BaseAccess,Describable{
 	private static final Log log=Log4jUtil.getLog(ResourceAccess.class);
 	
 	private String uri;
 	private AccessMethod defaultMethod;//=AccessMethod.R;
 	private String defaultDataType;
 	private String defaultErrorType;
+	private Interceptor interceptor;
 	
 	private Map<String, Result> resultMap;
 	
@@ -47,13 +55,15 @@ public class ResourceAccess{
 	
 	
 	public ResourceAccess(){}
-
-	public Object access(ResourceAccessContext context, boolean generate){
-		context.setResourceAccess(this);
+	
+	@Override
+	public Object access(ResourceAccessContext context){
+		context.setBaseAccess(this);
 		String accessType=context.getAccessType();
 		AccessMethod am=context.getAccessMethod();
 		CRUDAccess crudAccess=null;
 		String dataType=null;
+		boolean data=true;
 		try{
 			switch(am){
 			case C:
@@ -69,29 +79,40 @@ public class ResourceAccess{
 				crudAccess=Help.isEmpty(accessType)?this.defaultDeletable:deletableMap.get(accessType);
 			default:
 				context.setResult(this);
-				return generateResult(context,crudAccess, context.getDataType());
 			}
-			context.setCRUDAccess(crudAccess);
+			if(crudAccess!=null){
+				context.setCRUDAccess(crudAccess);
+			}else{
+				context.setCRUDAccess(new CRUDAccess());
+			}
 			crudAccess.access(context);
-			dataType=context.getDataType();
 		}catch(NullPointerException e){
 			Exception ex= new UnsupportedResourceAccessTypeException(am, accessType, e);
 			context.setResult(ex);
-			dataType=context.getErrorType();
+			data=false;
 			log.error("",e);
-		}catch(Throwable e){
+		}catch(Exception e){
 			context.setResult(e);
-			dataType=context.getErrorType();
+			data=false;
 			log.error("",e);
 		}
+		return data;
+	}
+	
+	@Override
+	public Object access(ResourceAccessContext context, boolean generate) throws Exception{
+		return determinResult(context,(Boolean)interceptor.access(context),generate);
+	}
+	private Object generateResult(ResourceAccessContext context,boolean data){
+		String dataType=context.getResultType(data);
+		return ((Result) Help.convert(context.getResult(dataType), resultMap.get(dataType), ROAAccess.getResult(dataType))).generate(context);
+	}
+	private Object determinResult(ResourceAccessContext context,boolean data,boolean generate){
 		if(generate){
-			return generateResult(context,crudAccess, dataType);
+			return generateResult(context,data);
 		}else{
 			return context.getResult();
 		}
-	}
-	private Object generateResult(ResourceAccessContext context, CRUDAccess crudAccess, String dataType){
-		return ((Result) Help.convert(crudAccess.getResult(dataType), resultMap.get(dataType))).generate(context);
 	}
 	public AccessMethod getDefaultMethod() {
 		return defaultMethod;
@@ -156,7 +177,9 @@ public class ResourceAccess{
 	public void setDefaultDataType(String defaultDataType) {
 		this.defaultDataType = defaultDataType;
 	}
-
+	public void setInterceptor(Interceptor interceptor){
+		this.interceptor=interceptor;
+	}
 	public String getDefaultErrorType(AccessMethod accessMethod, String accessType) {
 		accessMethod=convert(accessMethod);
 		try{
@@ -202,32 +225,50 @@ public class ResourceAccess{
 		this.defaultErrorType = defaultErrorType;
 	}
 
-	public String getResourceDescription() {
-		return resourceDescription;
-	}
-
 	public void setResourceDescription(String resourceDescription) {
 		this.resourceDescription = resourceDescription;
 	}
 	
-	public Set<String> getCreatableTypes(){
-		return creatableMap.keySet();
+	public Interceptor getInterceptor() {
+		return interceptor;
 	}
-	public Set<String> getRetrivableTypes(){
-		return retrivableMap.keySet();
+
+	public Map<String, Result> getResultMap() {
+		return resultMap;
 	}
-	public Set<String> getUpdatableTypes(){
-		return updatableMap.keySet();
+
+	public Map<String, CRUDAccess<Retrivable>> getRetrivableMap() {
+		return retrivableMap;
 	}
-	public Set<String> getDeletableTypes(){
-		return deletableMap.keySet();
+
+	public CRUDAccess<Retrivable> getDefaultRetrivable() {
+		return defaultRetrivable;
 	}
-	public Set<String> getResultNames(){
-		return resultMap.keySet();
+
+	public Map<String, CRUDAccess<Creatable>> getCreatableMap() {
+		return creatableMap;
 	}
-	
-	
-	
+
+	public CRUDAccess<Creatable> getDefaultCreatable() {
+		return defaultCreatable;
+	}
+
+	public Map<String, CRUDAccess<Updatable>> getUpdatableMap() {
+		return updatableMap;
+	}
+
+	public CRUDAccess<Updatable> getDefaultUpdatable() {
+		return defaultUpdatable;
+	}
+
+	public Map<String, CRUDAccess<Deletable>> getDeletableMap() {
+		return deletableMap;
+	}
+
+	public CRUDAccess<Deletable> getDefaultDeletable() {
+		return defaultDeletable;
+	}
+
 	public String getDefaultRetrivableType() {
 		return defaultRetrivableType;
 	}
@@ -308,4 +349,10 @@ public class ResourceAccess{
 		}
 		resultMap.put(name, result);
 	}
+
+	@Override
+	public Object getDescription() {
+		return this.resourceDescription;
+	}
+
 }

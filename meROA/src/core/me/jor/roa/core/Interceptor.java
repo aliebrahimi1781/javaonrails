@@ -1,7 +1,6 @@
 package me.jor.roa.core;
 
-import me.jor.roa.core.accessable.AccessableTag;
+import me.jor.roa.core.accessable.Accessable;
+import me.jor.roa.core.accessable.Describable;
 
-public interface Interceptor extends AccessableTag{
-	public Object intercept(ResourceAccessContext context);
-}
+public interface Interceptor extends Accessable,Describable{}

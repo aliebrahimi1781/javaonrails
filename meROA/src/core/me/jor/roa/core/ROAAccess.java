@@ -1,10 +1,12 @@
 package me.jor.roa.core;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import me.jor.common.GlobalObject;
 import me.jor.roa.core.accessable.AccessMethod;
+import me.jor.roa.core.accessable.BaseAccess;
 import me.jor.roa.core.accessable.Result;
 import me.jor.roa.exception.UnsupportedResourceAccessException;
 import me.jor.util.Log4jUtil;
@@ -15,22 +17,36 @@ import org.springframework.context.support.AbstractApplicationContext;
 
 public class ROAAccess {
 	private static final Log log=Log4jUtil.getLog(ROAAccess.class);
-	private static final Map<String, ResourceAccess> config=new HashMap<String, ResourceAccess>();
+	private static final Map<String, BaseAccess> config=new HashMap<String, BaseAccess>();
+	/**
+	 * 全局Result
+	 */
 	private static final Map<String, Result> resultMap=new HashMap<String, Result>();
 	private static AccessDataParser accessDataParser;
 	private static Map<String, ApplicationContext> applicationContextMap=new HashMap<String, ApplicationContext>();
+	private static final RemoteAccess remoteAccess=new RemoteAccess();
 	
 	
-	static void addResourceAccess(String url, ResourceAccess resourceAccess){
+	static void addResourceAccess(String url, BaseAccess resourceAccess){
 		config.put(url, resourceAccess);
 	}
 	static void addResult(String name, String uri, Result result){
 		Result existed=resultMap.get(name);
 		if(existed==null){
 			resultMap.put(name, new ResultMap(uri, result));
-		}else{
+		}else if(existed instanceof ResultMap){
 			((ResultMap)existed).addResult(uri, result);
+		}else{
+			ResultMap map=new ResultMap("",existed);
+			map.addResult(uri, result);
+			resultMap.put(name, map);
 		}
+	}
+	static void addResult(String name, Result result){
+		resultMap.put(name, result);
+	}
+	static Result getResult(String name){
+		return resultMap.get(name);
 	}
 	static void addApplicationContext(String path,ApplicationContext context){
 		ApplicationContext old=applicationContextMap.get(path);
@@ -40,9 +56,9 @@ public class ROAAccess {
 		applicationContextMap.put(path,context);
 	}
 	
-	static Object access(String uri, ResourceAccessContext context, boolean generate){
+	static Object access(String uri, ResourceAccessContext context, boolean generate) throws Exception{
 		try{
-			return config.get(uri).access(context,generate);
+			return getBaseAccess(uri).access(context,generate);
 		}catch(NullPointerException e){
 			Exception ex=new UnsupportedResourceAccessException(e);
 			log.error("",ex);
@@ -60,24 +76,43 @@ public class ROAAccess {
 		}
 	}
 	
+	private static BaseAccess getBaseAccess(String uri) throws InterruptedException, IOException{
+		BaseAccess res=config.get(uri);
+		if(res==null){
+			ROAConfigParser.parser.parse(uri.substring(0,uri.lastIndexOf('/'))/*此处为取得模块名*/);//此方法的实现已做了同步处理不必再同步
+			res=config.get(uri);
+			if(res==null){
+				synchronized(config){
+					res=config.get(uri);
+					if(res==null){
+						res=remoteAccess;
+						config.put(uri, remoteAccess);
+					}
+				}
+			}
+		}
+		return res;
+	}
+	
 	static <D> D parseAccessData(String accessData){
 		return (D)accessDataParser.parse(accessData);
 	}
 	
-	static AccessMethod getDefaultAccessMethod(String uri){
-		return config.get(uri).getDefaultMethod();
+	static AccessMethod getDefaultAccessMethod(String uri) throws InterruptedException, IOException{
+		return getBaseAccess(uri).getDefaultMethod();
 	}
-	static String getDefaultDataType(String uri, AccessMethod accessMethod, String accessType){
-		return config.get(uri).getDefaultDataType(accessMethod, accessType);
+	static String getDefaultDataType(String uri, AccessMethod accessMethod, String accessType) throws InterruptedException, IOException{
+		return getBaseAccess(uri).getDefaultDataType(accessMethod, accessType);
 	}
-	static String getDefaultErrorType(String uri, AccessMethod accessMethod, String accessType){
-		return config.get(uri).getDefaultErrorType(accessMethod, accessType);
+	static String getDefaultErrorType(String uri, AccessMethod accessMethod, String accessType) throws InterruptedException, IOException{
+		return getBaseAccess(uri).getDefaultErrorType(accessMethod, accessType);
 	}
-	static void addResult(String name, Result result){
-		resultMap.put(name, result);
+	
+    void addRemoteConfig(String ip,int port, String uri){
+		remoteAccess.addRemoteConfig(ip, port, uri);
 	}
-	static void optimize(){
-
+	void addRemoteConfig(String ip, int port, String[] uri){
+		remoteAccess.addRemoteConfig(ip,port,uri);
 	}
 	static void end(){
 		for(ApplicationContext context:applicationContextMap.values()){

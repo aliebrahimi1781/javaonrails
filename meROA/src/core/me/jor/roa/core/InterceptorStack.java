@@ -13,7 +13,6 @@ public class InterceptorStack implements Interceptor{
 	public InterceptorStack(List<Interceptor> interceptors){
 		this(interceptors.toArray(new Interceptor[0]));
 	}
-	
 	private int getI(){
 		Integer integer=idx.get();
 		int i=0;
@@ -29,14 +28,17 @@ public class InterceptorStack implements Interceptor{
 	}
 	
 	@Override
-	public Object intercept(ResourceAccessContext context) {
+	public Object access(ResourceAccessContext context) throws Exception {
 		Interceptor interceptor=getInteceptor();
 		if(interceptor!=null){
-			return interceptor.intercept(context);
+			return interceptor.access(context);
 		}else{
 			idx.remove();
-			return context.accessCRUD();
+			return context.access();
 		}
 	}
-
+	@Override
+	public Object getDescription() {
+		return interceptors;
+	}
 }

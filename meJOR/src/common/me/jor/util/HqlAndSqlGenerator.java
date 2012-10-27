@@ -162,5 +162,6 @@ public class HqlAndSqlGenerator extends SqlGenerator{
 	}
 	public <T> T uniqueHqlQuery(Session session){
 		return (T)populateQuery(session.createQuery(getSql())).uniqueResult();
-	}	
+	}
+	
 }

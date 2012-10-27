@@ -31,7 +31,6 @@ public class ApplicationContextConfigParser {
 		}catch(Exception e){
 			throw new ApplicationContextCreationException(e);
 		}
-		
 	}
 	static ApplicationContext createJarFileApplicationContext(ClassLoader parent, JarFile jar) throws IOException{
 		List<Resource> list=new ArrayList<Resource>();

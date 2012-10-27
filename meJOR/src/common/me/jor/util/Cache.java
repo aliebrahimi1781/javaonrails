@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import me.jor.util.policy.ClearByExecutorPolicy;
 import me.jor.util.policy.ClearPolicy;
@@ -54,7 +54,7 @@ public class Cache<E> {
 	/**
 	 * 重复锁对象
 	 */
-//	private final Lock lock=new ReentrantLock();
+	private final ReadWriteLock lock=new ReentrantReadWriteLock();
 	private static class HashAndEqualsSoftReference<G> extends SoftReference<G>{
 
 		public HashAndEqualsSoftReference(G g) {
@@ -138,13 +138,13 @@ public class Cache<E> {
 		return put(new StringSoftReference(key.toLowerCase()), new HashAndEqualsSoftReference<E>(value));
 	}
 	private E put(SoftReference<String> srk, SoftReference<E> srv){
-		synchronized(this){
-			try{
-				SoftReference<E> sre=cache.put(srk,srv);
-				return sre==null?null:sre.get();
-			}finally{
-				clear();
-			}
+		try{
+			lock.writeLock().lock();
+			SoftReference<E> sre=cache.put(srk,srv);
+			return sre==null?null:sre.get();
+		}finally{
+			clear();
+			lock.writeLock().unlock();
 		}
 	}
 	/**
@@ -170,20 +170,20 @@ public class Cache<E> {
 	 * @exception
 	 */
 	private E putIfAbsent(SoftReference<String> srk, SoftReference<E> srv){
-		synchronized(this){
-			try{
-				SoftReference<E> sre=cache.get(srk);
-				E e=sre==null?null:sre.get();
-				E e2=srv.get();
-				String k=srk.get();
-				if(e==null && k!=null && e2!=null){
-					cache.put(srk,srv);
-					return e2;
-				}
-				return e;
-			}finally{
-				clear();
+		try{
+			lock.writeLock().lock();
+			SoftReference<E> sre=cache.get(srk);
+			E e=sre==null?null:sre.get();
+			E e2=srv.get();
+			String k=srk.get();
+			if(e==null && k!=null && e2!=null){
+				cache.put(srk,srv);
+				return e2;
 			}
+			return e;
+		}finally{
+			clear();
+			lock.writeLock().unlock();
 		}
 	}
 	/**
@@ -196,7 +196,8 @@ public class Cache<E> {
 	 * @exception
 	 */
 	public E replace(String key, E value){
-		synchronized(this){
+		try{
+			lock.writeLock().lock();
 			clear();
 			SoftReference<String> srk=new StringSoftReference(key.toLowerCase());
 			SoftReference<E> sre=cache.get(srk);
@@ -207,6 +208,8 @@ public class Cache<E> {
 			}else{
 				return null;
 			}
+		}finally{
+			lock.writeLock().unlock();
 		}
 	}
 	/**
@@ -220,7 +223,8 @@ public class Cache<E> {
 	 * @exception
 	 */
 	public boolean replace(String key, E oldVal, E newVal){
-		synchronized(this){
+		try{
+			lock.writeLock().lock();
 			clear();
 			SoftReference<String> srk=new StringSoftReference(key.toLowerCase());
 			SoftReference<E> sre=cache.get(srk);
@@ -231,6 +235,8 @@ public class Cache<E> {
 			}else{
 				return false;
 			}
+		}finally{
+			lock.writeLock().unlock();
 		}
 	}
 	/**
@@ -241,11 +247,14 @@ public class Cache<E> {
 	 * @exception
 	 */
 	public E remove(String key){
-		synchronized(this){
+		try{
+			lock.writeLock().lock();
 			clear();
 			SoftReference<E> sre=cache.remove(new StringSoftReference(key.toLowerCase()));
 			return sre==null?null:sre.get();
-		}			
+		}finally{
+			lock.writeLock().unlock();
+		}
 	}
 	/**
 	 * 当缓存中包含指定key，且cache.get(new SoftReference<String>(key)).equals(oldVal)==true时，才移除key
@@ -256,7 +265,8 @@ public class Cache<E> {
 	 * @exception
 	 */
 	public boolean remove(String key, E val){
-		synchronized(this){
+		try{
+			lock.writeLock().lock();
 			clear();
 			SoftReference<String> sr=new StringSoftReference(key.toLowerCase());
 			SoftReference<E> sre=cache.get(sr);
@@ -266,6 +276,8 @@ public class Cache<E> {
 				return true;
 			}
 			return false;
+		}finally{
+			lock.writeLock().unlock();
 		}
 	}
 	/**
@@ -276,10 +288,13 @@ public class Cache<E> {
 	 * @exception
 	 */
 	public E get(String key){
-		synchronized(this){
+		try{
+			lock.readLock().lock();
 			clear();
 			SoftReference<E> sre=cache.get(new StringSoftReference(key.toLowerCase()));
 			return sre==null?null:sre.get();
+		}finally{
+			lock.readLock().unlock();
 		}
 	}
 	/**
@@ -290,9 +305,12 @@ public class Cache<E> {
 	 * @exception
 	 */
 	public boolean contains(String key){
-		synchronized(this){
+		try{
+			lock.readLock().lock();
 			clear();
 			return cache.containsKey(new StringSoftReference(key.toLowerCase()));
+		}finally{
+			lock.readLock().unlock();
 		}
 	}
 	/**
@@ -302,9 +320,12 @@ public class Cache<E> {
 	 * @exception
 	 */
 	public int size(){
-		synchronized(this){
+		try{
+			lock.readLock().lock();
 			clear();
 			return cache.size();
+		}finally{
+			lock.readLock().unlock();
 		}
 	}
 	/**
@@ -348,7 +369,9 @@ public class Cache<E> {
 			}
 		}
 		private void remove(String name){
-			nameSet.remove(name);
+			synchronized(nameSet){
+				nameSet.remove(name);
+			}
 		}
 		@Override
 		public void clear(Cache<E> cache) {

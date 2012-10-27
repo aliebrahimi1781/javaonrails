@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import me.jor.common.GlobalObject;
 import me.jor.roa.core.AccessData;
 import me.jor.roa.core.ResourceAccessHandler;
+import me.jor.util.Log4jUtil;
 
 public class ResourceAccessFilter implements Filter {
 
@@ -25,10 +26,18 @@ public class ResourceAccessFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
 			    throws IOException, ServletException {
-		HttpServletRequest hsr=((HttpServletRequest)request);
-		response.getWriter().print(ResourceAccessHandler.handle(hsr.getRequestURI(), 
-				GlobalObject.getJsonMapper().readValue(hsr.getParameter("param"), AccessData.class)).toString());
-		chain.doFilter(request, response);
+		try {
+			HttpServletRequest hsr=((HttpServletRequest)request);
+			response.getWriter().print(ResourceAccessHandler.handle(hsr.getRequestURI(), 
+					GlobalObject.getJsonMapper().readValue(hsr.getParameter("param"), AccessData.class)).toString());
+			chain.doFilter(request, response);
+		}catch(IOException e){
+			throw e;
+		}catch(ServletException e){
+			throw e;
+		} catch (Exception e) {
+			Log4jUtil.getLog(ResourceAccessFilter.class).error("",e);
+		}
 	}
 
 	@Override

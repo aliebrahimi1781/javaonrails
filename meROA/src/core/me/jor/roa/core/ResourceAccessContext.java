@@ -1,6 +1,7 @@
 package me.jor.roa.core;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -9,6 +10,9 @@ import java.util.regex.Pattern;
 import me.jor.roa.common.constant.ROAConstant;
 import me.jor.roa.core.accessable.AccessMethod;
 import me.jor.roa.core.accessable.AccessPurpose;
+import me.jor.roa.core.accessable.Accessable;
+import me.jor.roa.core.accessable.BaseAccess;
+import me.jor.roa.core.accessable.Result;
 import me.jor.util.Help;
 import me.jor.util.RegexUtil;
 
@@ -23,12 +27,13 @@ public class ResourceAccessContext{
 	private String uri;
 	private Object accessData;
 	private Object result;
-	private ResourceAccess resourceAccess;
+	private BaseAccess baseAccess;
 	private CRUDAccess crudAccess;
 	
 	private String dataType;
 	private String errorType;
 	private AccessMethod accessMethod;
+	private AccessStatus currentStatus=AccessStatus.START;
 	
 	private ResourceAccessContext(String uri, Object accessData){
 		this.uri=uri;
@@ -42,13 +47,15 @@ public class ResourceAccessContext{
 	/**
 	 * 被ResourceAccessHandler对象调用，作为资源访问的开始。
 	 * 也会被资源对象调用，从其它资源中获取相关信息
+	 * @throws IOException 
+	 * @throws InterruptedException 
 	 */
-	public final Object access() {
-		return ROAAccess.access(uri, this, false);
+	public final Object access() throws Exception {
+		return this.currentStatus.access(this);
 	}
 
-	void setResourceAccess(ResourceAccess resourceAccess) {
-		this.resourceAccess=resourceAccess;
+	void setBaseAccess(BaseAccess baseAccess) {
+		this.baseAccess=baseAccess;
 	}
 	
 	public String getUri(){
@@ -61,7 +68,7 @@ public class ResourceAccessContext{
 		this.result=result;
 	}
 
-	private <D> D getAccessData(){
+	<D> D getAccessData(){
 		if(accessData!=null && accessData instanceof String){
 			String data=accessData.toString();
 			if(data.startsWith("\"")){
@@ -112,7 +119,7 @@ public class ResourceAccessContext{
 			if(accessData instanceof AccessData){
 				accessMethod=(AccessMethod)((AccessData)accessData).getMethod();
 			}else{
-				accessMethod=resourceAccess.getDefaultMethod();
+				accessMethod=baseAccess.getDefaultMethod();
 			}
 		}
 		return accessMethod;
@@ -136,6 +143,9 @@ public class ResourceAccessContext{
 			}
 		}
 		return dataType;
+	}
+	public String getResultType(boolean data){
+		return data?getDataType():getErrorType();
 	}
 	public String getErrorType(){
 		if(Help.isEmpty(errorType)){
@@ -179,13 +189,56 @@ public class ResourceAccessContext{
 			return null;
 		}
 	}
+	
+	public Result getResult(String dataType) {
+		return crudAccess.getResult(dataType);
+	}
 
 	void setCRUDAccess(CRUDAccess crudAccess) {
 		this.crudAccess=crudAccess;
 	}
+	
+	private Object accessStart() throws Exception{
+		return ROAAccess.access(uri, this, true);
+	}
+	
+	private Object accessResource() throws Exception{
+		return this.baseAccess.access(this);
+	}
 
-
-	Object accessCRUD() {
+	private Object accessCRUD() throws Exception {
 		return crudAccess.accessTag(this);
+	}
+	
+	private enum AccessStatus implements Accessable{
+		START{
+			public Object access(ResourceAccessContext context) throws Exception{
+				try{
+					return context.accessStart();
+				}finally{
+					super.next(context,RESOURCE);
+				}
+			}
+		},RESOURCE{
+			public Object access(ResourceAccessContext context) throws Exception{
+				try{
+					return context.accessResource();
+				}finally{
+					super.next(context,CRUD);
+				}
+			}
+		},CRUD{
+			public Object access(ResourceAccessContext context)throws Exception{
+				try{
+					return context.accessCRUD();
+				}finally{
+					super.next(context,null);
+				}
+			}
+		};
+		public abstract Object access(ResourceAccessContext context) throws Exception;
+		private void next(ResourceAccessContext context, AccessStatus status){
+			context.currentStatus=status;
+		}
 	}
 }

@@ -6,7 +6,7 @@ import java.util.Set;
 import me.jor.roa.core.accessable.Accessable;
 import me.jor.roa.core.accessable.Result;
 
-public abstract class CRUDAccess<E extends Accessable> implements Accessable{
+public class CRUDAccess<E extends Accessable> implements Accessable{
 
 	private String defaultDataType;
 	private String defaultErrorType;
@@ -19,6 +19,7 @@ public abstract class CRUDAccess<E extends Accessable> implements Accessable{
 	
 	private E tag;
 	
+	CRUDAccess(){}
 	CRUDAccess(String defaultDataType, String defaultErrorType,Interceptor interceptor, E tag, String... dependingResources){
 		this.defaultDataType=defaultDataType;
 		this.defaultErrorType=defaultErrorType;
@@ -27,11 +28,11 @@ public abstract class CRUDAccess<E extends Accessable> implements Accessable{
 		this.dependingResources=dependingResources;
 	}
 	@Override
-	public Object access(ResourceAccessContext context) {
-		return interceptor.intercept(context);
+	public Object access(ResourceAccessContext context) throws Exception {
+		return interceptor.access(context);
 	}
 	
-	Object accessTag(ResourceAccessContext context){
+	Object accessTag(ResourceAccessContext context) throws Exception{
 		return tag.access(context);
 	}
 
@@ -63,10 +64,10 @@ public abstract class CRUDAccess<E extends Accessable> implements Accessable{
 		return resultMap.keySet();
 	}
 	
-	void addResult(String name, Result result){
+	public void addResult(String name, Result result){
 		resultMap.put(name, result);
 	}
-	Result getResult(String name){
+	public Result getResult(String name){
 		return resultMap.get(name);
 	}
 }

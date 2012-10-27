@@ -11,6 +11,7 @@ public class ROAConstant {
 	public static final BigInteger MIN_INT=new BigInteger(Integer.MIN_VALUE+"");
 	public static final BigInteger MAX_LONG=new BigInteger(Long.MAX_VALUE+"");
 	public static final BigInteger MIN_LONG=new BigInteger(Long.MIN_VALUE+"");
+	public static final String ROA_CONF_PARSER_DEF="/me/ROAConfParserDef";
 	
 	private static String defaultDataType;
 	private static String defaultErrorType;
@@ -43,5 +44,8 @@ public class ROAConstant {
 			}
 		}
 		return defaultErrorType;
+	}
+	public static boolean loadResOnStartup(){
+		return CommonConstant.getBooleanConstant("me.jor.roa.loadresonstartup", true);
 	}
 }

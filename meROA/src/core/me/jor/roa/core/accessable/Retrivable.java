@@ -1,5 +1,5 @@
 package me.jor.roa.core.accessable;
 
 
-public interface Retrivable extends Accessable{
+public interface Retrivable extends Accessable,Describable{
 }
