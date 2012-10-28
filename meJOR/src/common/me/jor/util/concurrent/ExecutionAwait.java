@@ -69,14 +69,18 @@ public class ExecutionAwait {
 		return await;
 	}
 	public void signal(){
-		synchronized(this){
-			this.notifyAll();
-			if(reinstate){
-				this.await=false;
-			}else{
-				this.wait=false;
+		if(!signaled){
+			synchronized(this){
+				if(!signaled){
+					this.notifyAll();
+					if(reinstate){
+						this.await=false;
+					}else{
+						this.wait=false;
+					}
+					signaled=true;
+				}
 			}
-			signaled=true;
 		}
 	}
 	/**
