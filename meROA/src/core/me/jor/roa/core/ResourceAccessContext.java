@@ -27,6 +27,7 @@ public class ResourceAccessContext{
 	private String uri;
 	private Object accessData;
 	private Object result;
+	private InterceptorStack interceptor;
 	private BaseAccess baseAccess;
 	private CRUDAccess crudAccess;
 	
@@ -46,7 +47,8 @@ public class ResourceAccessContext{
 	
 	/**
 	 * 被ResourceAccessHandler对象调用，作为资源访问的开始。
-	 * 也会被资源对象调用，从其它资源中获取相关信息
+	 * 也会被资源对象调用，从其它资源中获取相关信息，调用方式为ResourceAccessContext.newInstance(uri,accessData).access();
+	 * 它是各资源之间交互的枢纽，以及每次资源访问时控制访问过程的中枢
 	 * @throws IOException 
 	 * @throws InterruptedException 
 	 */
@@ -72,12 +74,9 @@ public class ResourceAccessContext{
 		if(accessData!=null && accessData instanceof String){
 			String data=accessData.toString();
 			if(data.startsWith("\"")){
-				String accessStr=data.substring(1,data.length()-1);
-				QUOTA.matcher(accessStr).replaceAll("\"");
-				BIAS.matcher(accessStr).replaceAll("\\");
-				accessData=(D)accessStr;
+				accessData=BIAS.matcher(data.substring(1,data.length()-1)).replaceAll("\\");
 			}else if(data.equals("true") || data.equals("false")){
-				accessData=(D)new Boolean(Boolean.parseBoolean(data));
+				accessData=new Boolean(Boolean.parseBoolean(data));
 			}else if(RegexUtil.isDigit(data)){
 				if(data.indexOf(".")>=0){
 					accessData=new BigDecimal(data);
@@ -118,7 +117,7 @@ public class ResourceAccessContext{
 			getAccessData();
 			if(accessData instanceof AccessData){
 				accessMethod=(AccessMethod)((AccessData)accessData).getMethod();
-			}else{
+			}else if(baseAccess!=null){
 				accessMethod=baseAccess.getDefaultMethod();
 			}
 		}
@@ -197,48 +196,55 @@ public class ResourceAccessContext{
 	void setCRUDAccess(CRUDAccess crudAccess) {
 		this.crudAccess=crudAccess;
 	}
-	
-	private Object accessStart() throws Exception{
-		return ROAAccess.access(uri, this, true);
-	}
-	
-	private Object accessResource() throws Exception{
-		return this.baseAccess.access(this);
-	}
-
-	private Object accessCRUD() throws Exception {
-		return crudAccess.accessTag(this);
+	void setInterceptor(Interceptor interceptor){
+		if(interceptor instanceof InterceptorStack){
+			this.interceptor=(InterceptorStack)interceptor;
+		}else{
+			this.interceptor=new InterceptorStack(new Interceptor[]{interceptor});
+		}
 	}
 	
 	private enum AccessStatus implements Accessable{
 		START{
+			@Override
 			public Object access(ResourceAccessContext context) throws Exception{
-				try{
-					return context.accessStart();
-				}finally{
-					super.next(context,RESOURCE);
-				}
+				super.next(context,INTERCEPTOR);
+				return ROAAccess.access(context, true);
+			}
+		},INTERCEPTOR{
+			@Override
+			public Object access(ResourceAccessContext context) throws Exception{
+				return super.accessInterceptor(context,RESOURCE);
 			}
 		},RESOURCE{
+			@Override
 			public Object access(ResourceAccessContext context) throws Exception{
-				try{
-					return context.accessResource();
-				}finally{
-					super.next(context,CRUD);
-				}
+				super.next(context,CRUD_INTERCEPTOR);
+				return context.baseAccess.access(context);
 			}
+		},CRUD_INTERCEPTOR{
+			@Override
+			public Object access(ResourceAccessContext context) throws Exception {
+				return super.accessInterceptor(context,CRUD);
+			}
+			
 		},CRUD{
+			@Override
 			public Object access(ResourceAccessContext context)throws Exception{
-				try{
-					return context.accessCRUD();
-				}finally{
-					super.next(context,null);
-				}
+				super.next(context,null);
+				return context.crudAccess.accessTag(context);
 			}
 		};
 		public abstract Object access(ResourceAccessContext context) throws Exception;
 		private void next(ResourceAccessContext context, AccessStatus status){
 			context.currentStatus=status;
+		}
+		private Object accessInterceptor(ResourceAccessContext context, AccessStatus status) throws Exception{
+			InterceptorStack interceptor=context.interceptor;
+			if(!interceptor.hasNext()){
+				this.next(context, status);
+			}
+			return interceptor!=null?interceptor.access(context):null;
 		}
 	}
 }

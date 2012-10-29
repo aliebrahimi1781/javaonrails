@@ -56,9 +56,9 @@ public class ROAAccess {
 		applicationContextMap.put(path,context);
 	}
 	
-	static Object access(String uri, ResourceAccessContext context, boolean generate) throws Exception{
+	static Object access(ResourceAccessContext context, boolean generate) throws Exception{
 		try{
-			return getBaseAccess(uri).access(context,generate);
+			return getBaseAccess(context.getUri()).access(context,generate);
 		}catch(NullPointerException e){
 			Exception ex=new UnsupportedResourceAccessException(e);
 			log.error("",ex);

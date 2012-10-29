@@ -101,7 +101,8 @@ public class ResourceAccess implements BaseAccess,Describable{
 	
 	@Override
 	public Object access(ResourceAccessContext context, boolean generate) throws Exception{
-		return determinResult(context,(Boolean)interceptor.access(context),generate);
+		context.setInterceptor(interceptor);
+		return determinResult(context,(Boolean)context.access(),generate);
 	}
 	private Object generateResult(ResourceAccessContext context,boolean data){
 		String dataType=context.getResultType(data);

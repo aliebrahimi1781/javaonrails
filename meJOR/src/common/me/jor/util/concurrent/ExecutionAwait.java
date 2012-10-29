@@ -3,6 +3,8 @@ package me.jor.util.concurrent;
 import me.jor.common.Task;
 import me.jor.util.Cache;
 
+import me.jor.exception.ReinstatableExecutionAwaitSignaledException;
+
 /**
  * 可以认为是me.jor.util.concurrent.ExecutingOnce的一个轻量级实现，但是比ExecutingOnce更灵活、更强大。
  * 可以为这类场景提供更大自由度的实现。
@@ -58,6 +60,9 @@ public class ExecutionAwait {
 	}
 	
 	public boolean await() throws InterruptedException{
+		if(signaled && reinstate){
+			throw new ReinstatableExecutionAwaitSignaledException("Reinstatable ExecutionAwait object has been signaled, a new object should be created");
+		}
 		boolean await;
 		synchronized(this){
 			await=this.await;
@@ -72,13 +77,13 @@ public class ExecutionAwait {
 		if(!signaled){
 			synchronized(this){
 				if(!signaled){
+					signaled=true;
 					this.notifyAll();
 					if(reinstate){
 						this.await=false;
 					}else{
 						this.wait=false;
 					}
-					signaled=true;
 				}
 			}
 		}

@@ -29,7 +29,8 @@ public class CRUDAccess<E extends Accessable> implements Accessable{
 	}
 	@Override
 	public Object access(ResourceAccessContext context) throws Exception {
-		return interceptor.access(context);
+		context.setInterceptor(interceptor);
+		return context.access();
 	}
 	
 	Object accessTag(ResourceAccessContext context) throws Exception{

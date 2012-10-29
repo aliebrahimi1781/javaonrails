@@ -681,27 +681,27 @@ public class Help {
 	 * @exception
 	 */
 	public static <E> E parse(Class<E> type, String value){
-		if(type.equals(Byte.TYPE) || type.equals(Byte.class) || type==Byte.TYPE || type.equals(Byte.TYPE)){
+		if(type.equals(Byte.TYPE) || type.equals(Byte.class) || type==Byte.TYPE || type==Byte.class){
 			return (E)new Byte(value);
-		}else if(type.equals(Short.TYPE) || type.equals(Short.class) || type==Short.TYPE || type.equals(Short.TYPE)){
+		}else if(type.equals(Short.TYPE) || type.equals(Short.class) || type==Short.TYPE || type==Short.class){
 			return (E)new Short(value);
-		}else if(type.equals(Integer.TYPE) || type.equals(Integer.class) || type==Integer.TYPE || type.equals(Integer.TYPE)){
+		}else if(type.equals(Integer.TYPE) || type.equals(Integer.class) || type==Integer.TYPE || type==Integer.class){
 			return (E)new Integer(value);
-		}else if(type.equals(Long.TYPE) || type.equals(Long.class) || type==Long.TYPE || type.equals(Long.TYPE)){
+		}else if(type.equals(Long.TYPE) || type.equals(Long.class) || type==Long.TYPE || type==Long.class){
 			return (E)new Long(value);
-		}else if(type.equals(Float.TYPE) || type.equals(Float.class) || type==Float.TYPE || type.equals(Float.TYPE)){
+		}else if(type.equals(Float.TYPE) || type.equals(Float.class) || type==Float.TYPE || type==Float.class){
 			return (E)new Float(value);
-		}else if(type.equals(Double.TYPE) || type.equals(Double.class) || type==Double.TYPE || type.equals(Double.TYPE)){
+		}else if(type.equals(Double.TYPE) || type.equals(Double.class) || type==Double.TYPE || type==Double.class){
 			return (E)new Double(value);
 		}else if(type.equals(BigInteger.class)){
 			return (E)new BigInteger(value);
 		}else if(type.equals(BigDecimal.class)){
 			return (E)new BigDecimal(value);
-		}else if(type.equals(Character.TYPE) || type.equals(Character.class) || type==Character.TYPE || type.equals(Character.TYPE)){
+		}else if(type.equals(Character.TYPE) || type.equals(Character.class) || type==Character.TYPE || type==Character.class){
 			return (E)new Character(value.charAt(0));
 		}else if(type.equals(String.class)){
 			return (E)value;
-		}else if(type.equals(Boolean.TYPE) || type.equals(Boolean.class) || type==Boolean.TYPE || type.equals(Boolean.TYPE)){
+		}else if(type.equals(Boolean.TYPE) || type.equals(Boolean.class) || type==Boolean.TYPE || type==Boolean.class){
 			return (E)new Boolean(value);
 		}else{
 			Class sc=null,pc=null,oc=Object.class;

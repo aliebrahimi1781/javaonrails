@@ -15,5 +15,4 @@ public class JsonParser implements AccessDataParser{
 			throw new AccessDataParseException(accessData, e);
 		}
 	}
-
 }
