@@ -3,7 +3,6 @@ package me.jor.roa.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import me.jor.common.GlobalObject;
 import me.jor.roa.core.accessable.Result;
 import me.jor.roa.exception.ResultExistingException;
 /**

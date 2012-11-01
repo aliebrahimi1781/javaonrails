@@ -84,12 +84,10 @@ public class ROAConfigParser implements ROAConfigParserDefinition{
 	 private void parseJar(File file, ClassLoader parent) throws IOException{
 		 JarFile jar=new JarFile(file);
 		 ApplicationContext context=ApplicationContextConfigParser.createJarFileApplicationContext(parent, jar);
-		 ROAAccess.addApplicationContext(file.getName(),context);
 		 parseROAConfig(jar, context);
 	 }
 	 private void parseClasspath(File classpath,ClassLoader parent){
 		 ApplicationContext context=ApplicationContextConfigParser.createClassPathApplicationContext(parent);
-		 ROAAccess.addApplicationContext(classpath.getName(),context);
     	 parseROAConfig(classpath,context);
 	 }
 	 private ROAConfigParserDefinition getParserDef(ApplicationContext context){
@@ -102,9 +100,11 @@ public class ROAConfigParser implements ROAConfigParserDefinition{
 	 @Override
 	 public void parseROAConfig(JarFile jar, ApplicationContext context){
 		 getParserDef(context).parseROAConfig(jar,context);
+		 //应在实现parseROAConfig时将context作为ResourceAccess对象保存
 	 }
 	 @Override
 	 public void parseROAConfig(File classpath, ApplicationContext context){
 		 getParserDef(context).parseROAConfig(classpath, context);
+		//应在实现parseROAConfig时将context作为ResourceAccess对象保存
 	 }
 }

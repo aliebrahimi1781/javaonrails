@@ -731,9 +731,9 @@ public class Help {
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(E e, Field field, Class fieldType, String value) throws IllegalArgumentException, IllegalAccessException{
+	public static <E> E populate(E e, Field field, Class fieldType, Object value) throws IllegalArgumentException, IllegalAccessException{
 		field.setAccessible(true);
-		field.set(e,parse(fieldType, trim(value)));
+		field.set(e,value instanceof String?parse(fieldType, trim((String)value)):value);
 		return e;
 	}
 	/**
@@ -748,7 +748,7 @@ public class Help {
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(E e, Field field, String value) throws IllegalArgumentException, IllegalAccessException{
+	public static <E> E populate(E e, Field field, Object value) throws IllegalArgumentException, IllegalAccessException{
 		return populate(e, field, field.getType(), value);
 	}
 	/**
@@ -766,7 +766,7 @@ public class Help {
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(Class<E> ce, E e, String name, String value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+	public static <E> E populate(Class<E> ce, E e, String name, Object value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		return populate(e, ce.getDeclaredField(name),value);
 	}
 	/**
@@ -783,8 +783,53 @@ public class Help {
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(E e, String name, String value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
+	public static <E> E populate(E e, String name, Object value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
 		return (E)populate((Class<E>)e.getClass(),e,name,value);
+	}
+	/**
+	 * 用map填充对象e，浅复制
+	 * 将map里的值作为对象e中与map的键同名的成员变量的值
+	 * @exception
+	 * @param <E>
+	 * @param e
+	 * @param param
+	 * @param populateEmpty 确定是否填充空值对象
+	 * @return E
+	 * @see
+	 */
+	public static <E> E populate(E e, Map<String,Object> param, boolean populateEmpty){
+		Class<E> c=(Class<E>)e.getClass();
+		Field[] fs=c.getDeclaredFields();
+		for(int i=0,l=fs.length;i<l;i++){
+			Field f=fs[i];
+			String name=f.getName();
+			Object v=param.get(name);
+			if(isNotEmpty(v)||populateEmpty){
+				try{
+					populate(e,f,f.getType(),v);
+				}catch(Exception ex){};
+			}
+		}
+		return e;
+	}
+	public static <E> E merge(E dst, Object src){
+		if(src instanceof Map){
+			return populate(dst,(Map<String,Object>)src,true);
+		}else{
+			Class srcCls=src.getClass();
+			Class dstCls=dst.getClass();
+			Field[] dstF=dstCls.getDeclaredFields();
+			for(int i=0,l=dstF.length;i<l;i++){
+				try{
+					Field f=dstF[i];
+					f.setAccessible(true);
+					Field srcF=srcCls.getDeclaredField(f.getName());
+					srcF.setAccessible(true);
+					f.set(dst, srcF.get(src));
+				}catch(Exception e){}
+			}
+		}
+		return dst;
 	}
 	/**
 	 * 把指定数组转化成List对象，Arrays.asList返回固定大小的List。这个方法返回的是ArrayList对象

@@ -21,7 +21,6 @@ import me.jor.util.RegexUtil;
  *
  */
 public class ResourceAccessContext{
-	private static final Pattern QUOTA=Pattern.compile("\\\"",Pattern.MULTILINE);
 	private static final Pattern BIAS=Pattern.compile("\\\\",Pattern.MULTILINE);
 	
 	private String uri;
@@ -29,20 +28,21 @@ public class ResourceAccessContext{
 	private Object result;
 	private InterceptorStack interceptor;
 	private BaseAccess baseAccess;
-	private CRUDAccess crudAccess;
 	
 	private String dataType;
 	private String errorType;
 	private AccessMethod accessMethod;
 	private AccessStatus currentStatus=AccessStatus.START;
+	private boolean generateResult;
 	
-	private ResourceAccessContext(String uri, Object accessData){
+	private ResourceAccessContext(String uri, Object accessData, boolean generateResult){
 		this.uri=uri;
 		this.accessData=accessData;
+		this.generateResult=generateResult;
 	}
 	
-	public static ResourceAccessContext newInstance(String uri, Object accessData){
-		return new ResourceAccessContext(uri, accessData);
+	public static ResourceAccessContext newInstance(String uri, Object accessData, boolean generateResult){
+		return new ResourceAccessContext(uri, accessData, generateResult);
 	}
 	
 	/**
@@ -138,7 +138,7 @@ public class ResourceAccessContext{
 				dataType=((AccessData)accessData).getDataType();
 			}else{
 				String dt=ROAConstant.getDefaultDataType();
-				dataType=Help.isEmpty(dt)?crudAccess.getDefaultDataType():dt;
+				dataType=Help.isEmpty(dt)?baseAccess.getDefaultDataType():dt;
 			}
 		}
 		return dataType;
@@ -153,7 +153,7 @@ public class ResourceAccessContext{
 				errorType=((AccessData)accessData).getErrorType();
 			}else{
 				String et=ROAConstant.getDefaultErrorType();
-				errorType=Help.isEmpty(et)?crudAccess.getDefaultErrorType():et;
+				errorType=Help.isEmpty(et)?baseAccess.getDefaultErrorType():et;
 			}
 		}
 		return errorType;
@@ -190,11 +190,7 @@ public class ResourceAccessContext{
 	}
 	
 	public Result getResult(String dataType) {
-		return crudAccess.getResult(dataType);
-	}
-
-	void setCRUDAccess(CRUDAccess crudAccess) {
-		this.crudAccess=crudAccess;
+		return baseAccess.getResult(dataType);
 	}
 	void setInterceptor(Interceptor interceptor){
 		if(interceptor instanceof InterceptorStack){
@@ -204,12 +200,17 @@ public class ResourceAccessContext{
 		}
 	}
 	
+	public boolean isGenerateResult() {
+		return generateResult;
+	}
+
+
 	private enum AccessStatus implements Accessable{
 		START{
 			@Override
 			public Object access(ResourceAccessContext context) throws Exception{
 				super.next(context,INTERCEPTOR);
-				return ROAAccess.access(context, true);
+				return ROAAccess.access(context);
 			}
 		},INTERCEPTOR{
 			@Override
@@ -219,20 +220,8 @@ public class ResourceAccessContext{
 		},RESOURCE{
 			@Override
 			public Object access(ResourceAccessContext context) throws Exception{
-				super.next(context,CRUD_INTERCEPTOR);
-				return context.baseAccess.access(context);
-			}
-		},CRUD_INTERCEPTOR{
-			@Override
-			public Object access(ResourceAccessContext context) throws Exception {
-				return super.accessInterceptor(context,CRUD);
-			}
-			
-		},CRUD{
-			@Override
-			public Object access(ResourceAccessContext context)throws Exception{
 				super.next(context,null);
-				return context.crudAccess.accessTag(context);
+				return context.baseAccess.access(context);
 			}
 		};
 		public abstract Object access(ResourceAccessContext context) throws Exception;

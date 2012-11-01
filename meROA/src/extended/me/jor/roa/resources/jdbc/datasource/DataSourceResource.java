@@ -1,16 +1,18 @@
-package me.jor.roa.jdbc.datasource;
+package me.jor.roa.resources.jdbc.datasource;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.locks.Lock;
 
 import javax.sql.DataSource;
 
 import me.jor.roa.core.ResourceAccessContext;
 import me.jor.roa.core.accessable.Retrivable;
 import me.jor.util.Help;
+import me.jor.util.LockCache;
 /**
  * access data is like below
  * {
@@ -47,7 +49,7 @@ public class DataSourceResource implements Retrivable{
 	}
 	
 	@Override
-	public Object access(ResourceAccessContext context) throws Exception {
+	public Object retrive(ResourceAccessContext context) throws Exception {
 		Object param=context.getAccessParam();
 		DataSource dataSource=null;
 		if(param instanceof String){
@@ -57,18 +59,31 @@ public class DataSourceResource implements Retrivable{
 			if(map.size()==1){
 				dataSource=dataSourceMap.get(map.get("name"));
 			}else{
-				String name=map.get("map");
-				String url=map.get("url");
-				String username=map.get("username");
-				String password=map.get("password");
-				if(Help.isEmpty(name)){
-					name=new StringBuilder(url).append('?').append(username).append(':').append(password).toString();
-				}
+				dataSource=get(map);
+			}
+		}
+		return dataSource;
+	}
+	private DataSource get(Map<String,String> param) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException{
+		String name=param.get("map");
+		String url=param.get("url");
+		String username=param.get("username");
+		String password=param.get("password");
+		if(Help.isEmpty(name)){
+			name=new StringBuilder(url).append('?').append(username).append(':').append(password).toString();
+		}
+		DataSource dataSource=dataSourceMap.get(name);
+		if(dataSource==null){
+			Lock lock=LockCache.getReentrantLock(name);
+			try{
+				lock.lock();
 				dataSource=dataSourceMap.get(name);
 				if(dataSource==null){
 					dataSource=create(url,username,password);
 					dataSourceMap.put(name, dataSource);
 				}
+			}finally{
+				lock.unlock();
 			}
 		}
 		return dataSource;

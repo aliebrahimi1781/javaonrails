@@ -17,6 +17,6 @@ public class ResourceAccessServerTask implements ExecutionAfterReading<String>{
 	@Override
 	public <T> T execute() throws Throwable {
 		String[] ad=this.accessData.split("?");
-		return (T)ResourceAccessHandler.handle(ad[0], GlobalObject.getJsonMapper().readValue(ad[1], AccessData.class));
+		return (T)ResourceAccessHandler.handle(ad[0], GlobalObject.getJsonMapper().readValue(ad[1], AccessData.class),true);
 	}
 }

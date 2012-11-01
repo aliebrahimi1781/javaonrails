@@ -3,7 +3,7 @@ package me.jor.roa.core.accessable;
 import me.jor.roa.exception.NoSuchEnumValueException;
 
 public enum AccessMethod {
-	C(0),R(1),U(2),D(3);
+	C(0),R(1),U(2),D(3),O(4);
 	private int type;
 	private AccessMethod(int type){
 		this.type=type;

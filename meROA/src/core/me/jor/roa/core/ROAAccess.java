@@ -1,8 +1,10 @@
 package me.jor.roa.core;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import me.jor.common.GlobalObject;
 import me.jor.roa.core.accessable.AccessMethod;
@@ -13,17 +15,15 @@ import me.jor.util.Log4jUtil;
 
 import org.apache.commons.logging.Log;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.AbstractApplicationContext;
 
 public class ROAAccess {
 	private static final Log log=Log4jUtil.getLog(ROAAccess.class);
-	private static final Map<String, BaseAccess> config=new HashMap<String, BaseAccess>();
+	private static final Map<String, BaseAccess> config=new ConcurrentHashMap<String, BaseAccess>();
 	/**
 	 * 全局Result
 	 */
 	private static final Map<String, Result> resultMap=new HashMap<String, Result>();
 	private static AccessDataParser accessDataParser;
-	private static Map<String, ApplicationContext> applicationContextMap=new HashMap<String, ApplicationContext>();
 	private static final RemoteAccess remoteAccess=new RemoteAccess();
 	
 	
@@ -48,22 +48,15 @@ public class ROAAccess {
 	static Result getResult(String name){
 		return resultMap.get(name);
 	}
-	static void addApplicationContext(String path,ApplicationContext context){
-		ApplicationContext old=applicationContextMap.get(path);
-		if(old!=null){
-			((AbstractApplicationContext)old).destroy();
-		}
-		applicationContextMap.put(path,context);
-	}
 	
-	static Object access(ResourceAccessContext context, boolean generate) throws Exception{
+	static Object access(ResourceAccessContext context) throws Exception{
 		try{
-			return getBaseAccess(context.getUri()).access(context,generate);
+			return getBaseAccess(context.getUri()).access(context);
 		}catch(NullPointerException e){
 			Exception ex=new UnsupportedResourceAccessException(e);
 			log.error("",ex);
 			context.setResult(ex);
-			if(generate){
+			if(context.isGenerateResult()){
 				Result result=resultMap.get(context.getErrorType());
 				try{
 					return result!=null?result.generate(context):GlobalObject.getJsonMapper().writeValueAsString(context);
@@ -102,10 +95,10 @@ public class ROAAccess {
 		return getBaseAccess(uri).getDefaultMethod();
 	}
 	static String getDefaultDataType(String uri, AccessMethod accessMethod, String accessType) throws InterruptedException, IOException{
-		return getBaseAccess(uri).getDefaultDataType(accessMethod, accessType);
+		return getBaseAccess(uri).getDefaultDataType();
 	}
 	static String getDefaultErrorType(String uri, AccessMethod accessMethod, String accessType) throws InterruptedException, IOException{
-		return getBaseAccess(uri).getDefaultErrorType(accessMethod, accessType);
+		return getBaseAccess(uri).getDefaultErrorType();
 	}
 	
     void addRemoteConfig(String ip,int port, String uri){
@@ -115,8 +108,13 @@ public class ROAAccess {
 		remoteAccess.addRemoteConfig(ip,port,uri);
 	}
 	static void end(){
-		for(ApplicationContext context:applicationContextMap.values()){
-			((AbstractApplicationContext)context).close();
+		for(BaseAccess access:config.values()){
+			if(access instanceof ResourceAccess){
+				try{
+					ApplicationContext context=(ApplicationContext)((ResourceAccess) access).getApplicationContext();
+					context.getClass().getMethod("close").invoke(context);
+				}catch(Exception e){}
+			}
 		}
 	}
 	

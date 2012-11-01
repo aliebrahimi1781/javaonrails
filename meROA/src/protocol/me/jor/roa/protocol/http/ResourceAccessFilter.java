@@ -29,7 +29,7 @@ public class ResourceAccessFilter implements Filter {
 		try {
 			HttpServletRequest hsr=((HttpServletRequest)request);
 			response.getWriter().print(ResourceAccessHandler.handle(hsr.getRequestURI(), 
-					GlobalObject.getJsonMapper().readValue(hsr.getParameter("param"), AccessData.class)).toString());
+					GlobalObject.getJsonMapper().readValue(hsr.getParameter("param"), AccessData.class),true).toString());
 			chain.doFilter(request, response);
 		}catch(IOException e){
 			throw e;
