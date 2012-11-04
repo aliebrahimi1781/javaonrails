@@ -1,4 +1,4 @@
-package me.jor.roa.protocol.http;
+package me.jor.roa.protocol.servlet;
 
 import java.io.IOException;
 

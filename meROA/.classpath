@@ -21,6 +21,7 @@
 	<classpathentry kind="lib" path="lib/jackson-core-asl-1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-jaxrs-1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-continuation-8.1.7.v20120910.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="lib" path="lib/me.jor-forROA.jar"/>
 	<classpathentry kind="lib" path="lib/org.springframework.aop-3.0.5.RELEASE.jar"/>
