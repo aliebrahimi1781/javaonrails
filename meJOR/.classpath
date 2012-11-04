@@ -8,6 +8,7 @@
 	<classpathentry kind="src" path="conf"/>
 	<classpathentry kind="src" path="src/ssh"/>
 	<classpathentry kind="src" path="src/codereview"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/activation.jar"/>
 	<classpathentry kind="lib" path="lib/activeio-core-3.1.2.jar"/>
 	<classpathentry kind="lib" path="lib/activemq-core-5.4.0.jar"/>
@@ -147,6 +148,7 @@
 	<classpathentry kind="lib" path="lib/org.springframework.jms-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/org.springframework.orm-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/org.springframework.oxm-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/org.springframework.spring-library-3.0.5.RELEASE.libd"/>
 	<classpathentry kind="lib" path="lib/org.springframework.test-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/org.springframework.transaction-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/org.springframework.web-3.0.5.RELEASE.jar"/>
@@ -195,6 +197,8 @@
 	<classpathentry kind="lib" path="lib/svnkit-cli.jar"/>
 	<classpathentry kind="lib" path="lib/svnkit-javahl.jar"/>
 	<classpathentry kind="lib" path="lib/svnkit.jar"/>
+	<classpathentry kind="lib" path="lib/svnkitclisrc.zip"/>
+	<classpathentry kind="lib" path="lib/svnkitsrc.zip"/>
 	<classpathentry kind="lib" path="lib/testng-5.1-jdk15.jar"/>
 	<classpathentry kind="lib" path="lib/tiles-api-2.0.6.jar"/>
 	<classpathentry kind="lib" path="lib/tiles-core-2.0.6.jar"/>
@@ -219,6 +223,5 @@
 	<classpathentry kind="lib" path="lib/xsdlib-20030807.jar"/>
 	<classpathentry kind="lib" path="lib/xstream-1.2.2.jar"/>
 	<classpathentry kind="lib" path="lib/xwork-core-2.2.1.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
