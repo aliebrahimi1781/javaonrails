@@ -373,6 +373,121 @@ public class Help {
 		}
 		return src;
 	}
+	public static int convert(String src, int v){
+		if(isNotEmpty(src)){
+			return Integer.parseInt(src);
+		}else{
+			return v;
+		}
+	}
+	public static long convert(String src, long v){
+		if(isNotEmpty(src)){
+			return Long.parseLong(src);
+		}else{
+			return v;
+		}
+	}
+	public static double convert(String src, double v){
+		if(isNotEmpty(src)){
+			return Double.parseDouble(src);
+		}else{
+			return v;
+		}
+	}
+	public static float convert(String src, float v){
+		if(isNotEmpty(src)){
+			return Float.parseFloat(src);
+		}else{
+			return v;
+		}
+	}
+	public static byte convert(String src, byte v){
+		if(isNotEmpty(src)){
+			return Byte.parseByte(src);
+		}else{
+			return v;
+		}
+	}
+	public static Short convert(String src, short v){
+		if(isNotEmpty(src)){
+			return Short.parseShort(src);
+		}else{
+			return v;
+		}
+	}
+	public static BigInteger convert(String src, BigInteger v){
+		if(isNotEmpty(src)){
+			return new BigInteger(src);
+		}else{
+			return v;
+		}
+	}
+	public static BigDecimal convert(String src, BigDecimal v){
+		if(isNotEmpty(src)){
+			return new BigDecimal(src);
+		}else{
+			return v;
+		}
+	}
+	public static boolean convert(String src, boolean v){
+		if(isNotEmpty(src)){
+			return Boolean.parseBoolean(src);
+		}else{
+			return v;
+		}
+	}
+	public static boolean convert(String src, boolean emptyAsFalse, boolean zeroAsFalse, boolean blankAsFalse){
+		if(isEmpty(src) && emptyAsFalse){
+			return false;
+		}else if(src.equals("0") && zeroAsFalse){
+			return false;
+		}else if(src.matches("^true|false$")){
+			return Boolean.parseBoolean(src);
+		}else if(src.matches("^\\s+$") && blankAsFalse){
+			return false;
+		}else{
+			throw new IllegalArgumentException(src);
+		}
+	}
+	public static boolean convertEmptyAsFalse(String src){
+		return convert(src, true,false,false);
+	}
+	public static boolean convertZeroAsFalse(String src){
+		return convert(src, false,true,false);
+	}
+	public static boolean convertBlankAsFalse(String src){
+		return convert(src, false,false,true);
+	}
+	public static boolean convertEmptyZeroAsFalse(String src){
+		return convert(src, true,true,false);
+	}
+	public static boolean convertEmptyBlankAsFalse(String src){
+		return convert(src, true,false,true);
+	}
+	public static boolean convertZeroBlankAsFalse(String src){
+		return convert(src, false,true,true);
+	}
+	public static boolean convertEmptyZeroBlankAsFalse(String src){
+		return convert(src, true,true,true);
+	}
+	public static boolean convert(Integer src, boolean nullAsFalse){
+		if(src==null){
+			if(nullAsFalse){
+				return false;
+			}else{
+				throw new NullPointerException("arg src must not be null");
+			}
+		}else{
+			return src!=0?true:false;
+		}
+	}
+	public static <E extends Enum<E>> E convert(String src, E e){
+		if(isNotEmpty(src)){
+			return (E)Enum.valueOf(e.getClass(), src);
+		}else{
+			return e;
+		}
+	}
 	/**
 	 *  把src连接成以seperator分隔的字符串，且不以seperator结尾
 	 * @param src 集合
@@ -812,22 +927,142 @@ public class Help {
 		}
 		return e;
 	}
-	public static <E> E merge(E dst, Object src){
-		if(src instanceof Map){
-			return populate(dst,(Map<String,Object>)src,true);
-		}else{
-			Class srcCls=src.getClass();
-			Class dstCls=dst.getClass();
-			Field[] dstF=dstCls.getDeclaredFields();
-			for(int i=0,l=dstF.length;i<l;i++){
-				try{
-					Field f=dstF[i];
-					f.setAccessible(true);
-					Field srcF=srcCls.getDeclaredField(f.getName());
-					srcF.setAccessible(true);
-					f.set(dst, srcF.get(src));
-				}catch(Exception e){}
+	public static <E> E merge(E dst, Object... src){
+		for(int i=0,l=src.length;i<l;i++){
+			Object s=src[i];
+			if(s instanceof Map){
+				return populate(dst,(Map<String,Object>)s,true);
+			}else{
+				Class srcCls=s.getClass();
+				Class dstCls=dst.getClass();
+				Field[] dstF=dstCls.getDeclaredFields();
+				for(int j=0,jl=dstF.length;j<jl;j++){
+					try{
+						Field f=dstF[j];
+						f.setAccessible(true);
+						Field srcF=srcCls.getDeclaredField(f.getName());
+						srcF.setAccessible(true);
+						f.set(dst, srcF.get(s));
+					}catch(Exception e){}
+				}
 			}
+		}
+		return dst;
+	}
+	public static <E> Collection<E> merge(Collection<E> dst, Collection<E>... src){
+		for(int i=0,l=src.length;i<l;i++){
+			Collection<E> c=src[i];
+			for(E e:c){
+				dst.add(e);
+			}
+		}
+		return dst;
+	}
+	public static <E> E[] merge(Class<E> cls, E[]... src){
+		E[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			E[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=(E[])Array.newInstance(cls, src1l+srcl);
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static byte[] merge(byte[]... src){
+		byte[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			byte[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new byte[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static short[] merge(short[]... src){
+		short[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			short[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new short[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static char[] merge(char[]... src){
+		char[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			char[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new char[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static int[] merge(int[]... src){
+		int[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			int[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new int[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static long[] merge(long[]... src){
+		long[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			long[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new long[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static float[] merge(float[]... src){
+		float[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			float[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new float[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static double[] merge(double[]... src){
+		double[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			double[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new double[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
+		}
+		return dst;
+	}
+	public static boolean[] merge(boolean[]... src){
+		boolean[] dst=null,src1=src[0];
+		for(int i=1,l=src.length;i<l;i++){
+			boolean[] es=src[i];
+			int srcl=es.length,src1l=src1.length;
+			dst=new boolean[src1l+srcl];
+			System.arraycopy(src1, 0, dst, 0, src1l);
+			System.arraycopy(es, 0, dst, src1l, srcl);
+			src1=dst;
 		}
 		return dst;
 	}

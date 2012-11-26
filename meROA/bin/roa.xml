@@ -2,6 +2,28 @@
 <roa><!-- spring配置文件名：applicationContext-module-*.xml -->
 <!-- 拦截器的定义将会被继承到子模块，合法的module名由数字、大小写字母、减号、下划线、点号组成 -->
 <!-- package-prefix由 -->
+    <remote>
+        <host ip="" port=""><!-- nio socket 资源名作为参数的一部分 -->
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+        </host>
+        <host webservice=""><!-- 资源名作为参数的一部分 -->
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+        </host>
+        <host jms=""><!-- 点对点jms 资源名作为参数的一部分-->
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+        </host>
+        <host url=""><!-- http servlet，资源名作为url的一部分 -->
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+            <resource category="" name=""/>
+        </host>
+    </remote>
     <module name="root" extends="">
         <default-dataType name=""/>
         <default-errorType name=""/>
@@ -37,17 +59,12 @@
 	                                             每个creatable retrivable updatable deletable最多各有一个默认访问
 	                                             如果有超过一个默认会在加载时抛出异常 -->
 	            <creatable name="" default="true">
+	                <interceptor-ref name=""/>
 	                <default-dataType name=""/>
 	                <default-errorType name=""/>
 	                <default-accessType name=""/>
 	                
 	                <result name="" class=""/>
-	                
-	                <depending-reources>
-	                <!-- 用英文逗号分隔的完整资源名，完整资源名包括资源分类名和资源名
-	                                                        出现的任何空白符一律忽略 -->
-	                    <![CDATA[]]>
-	                </depending-reources>
 	            </creatable>
 	            <retrivable name=""/>
 	            <updatable name=""/>

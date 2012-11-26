@@ -4,18 +4,30 @@ import java.util.regex.Pattern;
 
 public class RegexUtil {
 	/**类c语法的注释正则表达式*/
-	private static Pattern commentRegex;
-	private static Pattern digitRegex;
+	private static Pattern COMMENT;
+	private static Pattern DIGIT;
+	private static Pattern BASE64;
 	
-	private static Pattern getCommentRegex(){
-		if(commentRegex==null){
+	private static Pattern getBase64(){
+		if(BASE64==null){
 			synchronized(RegexUtil.class){
-				if(commentRegex==null){
-					commentRegex=Pattern.compile("//.*|(/\\*([^(\\*/)]*))+(\\*/{1}?)");
+				if(BASE64==null){
+					BASE64=Pattern.compile("^[a-zA-Z0-9/\r\n+]{4,}={0,2}$");
 				}
 			}
 		}
-		return commentRegex;
+		return BASE64;
+	}
+	
+	private static Pattern getCommentRegex(){
+		if(COMMENT==null){
+			synchronized(RegexUtil.class){
+				if(COMMENT==null){
+					COMMENT=Pattern.compile("//.*|(/\\*([^(\\*/)]*))+(\\*/{1}?)");
+				}
+			}
+		}
+		return COMMENT;
 	}
 	/**
 	 * 删除文本中的所有类c语法注释内容
@@ -46,14 +58,14 @@ public class RegexUtil {
 	}
 	
 	private static Pattern getDigitRegex(){
-		if(digitRegex==null){
+		if(DIGIT==null){
 			synchronized(Pattern.class){
-				if(digitRegex==null){
-					digitRegex=Pattern.compile("^(\\d*\\.)?\\d+|\\d+(\\.?\\d*)?$");
+				if(DIGIT==null){
+					DIGIT=Pattern.compile("^(\\d*\\.)?\\d+|\\d+(\\.?\\d*)?$");
 				}
 			}
 		}
-		return digitRegex;
+		return DIGIT;
 	}
 	/**
 	 * 判断src是否数字串
@@ -62,5 +74,9 @@ public class RegexUtil {
 	 */
 	public static boolean isDigit(String src){
 		return getDigitRegex().matcher(src).matches();
+	}
+	
+	public static boolean isBase64(String src){
+		return getBase64().matcher(src).matches();
 	}
 }

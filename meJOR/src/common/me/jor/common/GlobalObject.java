@@ -15,6 +15,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 public final class GlobalObject {
 	private GlobalObject(){}
 	
+	public static final sun.misc.BASE64Encoder BASE64_ENCODER=new sun.misc.BASE64Encoder();
+	public static final sun.misc.BASE64Decoder BASE64_DECODER=new sun.misc.BASE64Decoder();
 	private static ExecutorService executorService;
 	private static ObjectMapper jsonMapper;
 	

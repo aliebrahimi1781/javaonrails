@@ -3,6 +3,9 @@ package me.jor.util.concurrent;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+
+import me.jor.util.LockCache;
 
 /**
  * 针对同一个类、对象或工具的初始化和反初始化发生并发冲突时使用此类<br/>
@@ -39,13 +42,17 @@ public class ConcurrentInitAndEnd {
 	 */
 	public static void init(String key, Runnable initask) throws InterruptedException{
 		if(!concurrent.containsKey(key)){
-			synchronized(key){
+			Lock lock=LockCache.getReentrantLock(key);
+			try{
+				lock.lock();
 				if(!concurrent.containsKey(key)){
 					concurrent.put(key, new AtomicInteger(1));
 					initask.run();
 				}else{
 					concurrent.get(key).getAndIncrement();
 				}
+			}finally{
+				lock.unlock();
 			}
 		}else{
 			concurrent.get(key).getAndIncrement();
@@ -64,11 +71,15 @@ public class ConcurrentInitAndEnd {
 		}catch(NullPointerException e){
 			return;
 		}
-		synchronized(key){
+		Lock lock=LockCache.getReentrantLock(key);
+		try{
+			lock.lock();
 			if(concurrent.get(key).get()<=0){
 				concurrent.remove(key);
 				endtask.run();
 			}
+		}finally{
+			lock.unlock();
 		}
 	}
 }

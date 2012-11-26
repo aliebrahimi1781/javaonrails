@@ -2,7 +2,6 @@ package me.jor.nio.client;
 
 import java.io.IOException;
 import java.nio.channels.Channel;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;

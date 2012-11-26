@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import me.jor.exception.CUDException;
+import me.jor.exception.EmptyIDArrayException;
 import me.jor.util.Help;
 
 import org.hibernate.HibernateException;
@@ -20,8 +21,6 @@ import org.hibernate.Session;
 import org.springframework.dao.DataAccessException;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
-
-import me.jor.exception.EmptyIDArrayException;
 
 /**
  * 基于hibernate实现的数据访问对象的公共超类。

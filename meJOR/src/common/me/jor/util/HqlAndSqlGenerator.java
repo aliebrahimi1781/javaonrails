@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import me.jor.exception.SqlGeneratorException;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
-
-import me.jor.exception.SqlGeneratorException;
 
 public class HqlAndSqlGenerator extends SqlGenerator{
 	protected Map<String,Object> namedParams=new HashMap<String,Object>();

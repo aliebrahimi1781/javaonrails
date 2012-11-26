@@ -27,16 +27,14 @@ public class ResourceAccessFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
 			    throws IOException, ServletException {
 		try {
-			HttpServletRequest hsr=((HttpServletRequest)request);
-			response.getWriter().print(ResourceAccessHandler.handle(hsr.getRequestURI(), 
-					GlobalObject.getJsonMapper().readValue(hsr.getParameter("param"), AccessData.class),true).toString());
+			ServletResourceAccessUtil.access(request, response,null);
 			chain.doFilter(request, response);
 		}catch(IOException e){
 			throw e;
 		}catch(ServletException e){
 			throw e;
 		} catch (Exception e) {
-			Log4jUtil.getLog(ResourceAccessFilter.class).error("",e);
+			throw new ServletException(e);
 		}
 	}
 

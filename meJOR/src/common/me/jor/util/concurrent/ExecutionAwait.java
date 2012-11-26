@@ -1,9 +1,8 @@
 package me.jor.util.concurrent;
 
 import me.jor.common.Task;
-import me.jor.util.Cache;
-
 import me.jor.exception.ReinstatableExecutionAwaitSignaledException;
+import me.jor.util.Cache;
 
 /**
  * 可以认为是me.jor.util.concurrent.ExecutingOnce的一个轻量级实现，但是比ExecutingOnce更灵活、更强大。
