@@ -81,7 +81,6 @@ public class Encryptor extends EnDecryptionUtil{
     	encrypt(src,dst,base64key?GlobalObject.BASE64_DECODER.decodeBuffer(key):key.getBytes(CommonConstant.DEFAULT_CHARSET));
     }
     
-    
     public static void main(String[] args) throws IOException {
     	String uuid=UUID.randomUUID().toString();
     	
@@ -98,7 +97,8 @@ public class Encryptor extends EnDecryptionUtil{
 //    	System.out.println(MessageDigestUtil.md5Base64(uuid).length()+"  "+md5(uuid).length()+"  "+uuid.replace("-","").length());
 		System.out.println(s+"  "+s.length());
 		System.out.println(Decryptor.decrypt(s,uuid));
-		System.out.println(GlobalObject.BASE64_ENCODER.encode(new byte[2]));
+		System.out.println(GlobalObject.BASE64_ENCODER.encode(new byte[]{(byte)128}));
 		System.out.println(encrypt(singleUUIDBytes(),singleUUIDBytes()).length);
+		System.out.println(isBase64Key("gA=="));
 	}
 }

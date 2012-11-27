@@ -10,7 +10,7 @@
 	     *     ......properties and methods
 	     *  }
 	     *  @return 返回值是一个对象的构造器C。 C.$super指向超类的prototype。可以使用C.$super.$super得到超类的超类的prototype
-	                用这个构造器构造的新对象内部使用如下代码this.$super===C.$super，结果是true; C.prototype.$super===C.$super是true
+	     *          用这个构造器构造的新对象内部使用如下代码this.$super===C.$super，结果是true; C.prototype.$super===C.$super是true
 	     */
 	    declare:function(args){
 	    	  function F(){}
