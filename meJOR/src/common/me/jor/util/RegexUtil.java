@@ -12,7 +12,7 @@ public class RegexUtil {
 		if(BASE64==null){
 			synchronized(RegexUtil.class){
 				if(BASE64==null){
-					BASE64=Pattern.compile("^[a-zA-Z0-9/\r\n+]{4,}={0,2}$");
+					BASE64=Pattern.compile("^[a-zA-Z0-9/+]{2,}={0,2}$");
 				}
 			}
 		}

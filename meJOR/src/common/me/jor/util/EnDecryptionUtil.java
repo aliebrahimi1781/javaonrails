@@ -41,15 +41,17 @@ class EnDecryptionUtil extends MessageDigestUtil{
     	populate(UUID.randomUUID(),dst,0);
     	return dst;
     }
-    private static void populate(UUID src, byte[] dst, int offset){
+    private static byte[] populate(UUID src, byte[] dst, int offset){
     	populate(src.getLeastSignificantBits(),dst,offset);
 		populate(src.getMostSignificantBits(),dst,offset+8);
+		return dst;
     }
-    private static void populate(long src, byte[] dst, int offset){
+    private static byte[] populate(long src, byte[] dst, int offset){
     	for(int i=offset+7;i>=offset;i--){
     		dst[i]=(byte)(src&0xff);
     		src>>>=8;
     	}
+    	return dst;
     }
     protected static byte[] digest(byte[] src){
     	return digest(src,src);
