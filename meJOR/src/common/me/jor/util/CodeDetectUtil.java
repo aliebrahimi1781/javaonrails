@@ -6,6 +6,7 @@ import info.monitorenter.cpdetector.io.JChardetFacade;
 import info.monitorenter.cpdetector.io.ParsingDetector;
 import info.monitorenter.cpdetector.io.UnicodeDetector;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,13 +74,41 @@ public class CodeDetectUtil {
 	 * @param in
 	 *        判断字符集的输入流
 	 * @param length
-	 *        使用输入流的前面length个字节判断
+	 *        使用输入流的前面length个字节判断。
+	 *        不建议使用太大的值，因为InputStream对象会标记调用时流的位置并在方法返回前缓存所有读过的字节，
+	 *        并在方法返回前重置流到标记的位置；否则会占用过多的内存
 	 * @return 输入流的字符集名称
 	 * @throws MalformedURLException
 	 * @throws IOException String
 	 */
 	public static String detectCharset (InputStream in, int length) throws MalformedURLException, IOException{
-		return codeDetector.detectCodepage(in,length).name();
+		try{
+			in.mark(length);
+			return codeDetector.detectCodepage(in,length).name();
+		}finally{
+			in.reset();
+		}
+	}
+	/**
+	 * 返回指定字节数组的字符集
+	 * @param src  要判断字符集的字节
+	 * @return  字节数组的字符集
+	 * @throws MalformedURLException 
+	 * @throws IOException String
+	 */
+	public static String detectCharset(byte[] src) throws MalformedURLException, IOException{
+		return detectCharset(src,src.length);
+	}
+	/**
+	 * 返回指定字节数组的字符集
+	 * @param src     要判断字符集的字节
+	 * @param length  用来判断的字节数量，从数组开头计算
+	 * @return        字节数组的字符集
+	 * @throws MalformedURLException
+	 * @throws IOException String
+	 */
+	public static String detectCharset(byte[] src, int length) throws MalformedURLException, IOException{
+		return detectCharset(new ByteArrayInputStream(src),length);
 	}
 	
 //	public static void main(String[] args) throws MalformedURLException, IOException {
