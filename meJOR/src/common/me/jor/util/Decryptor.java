@@ -17,7 +17,7 @@ public class Decryptor extends EnDecryptionUtil{
 	    * Passport 解密函数
 	    * 
 	    * @param        string      加密后的字串
-	    * @param        string      私有密匙(用于解密和加密)
+	    * @param        string      私有密匙(用于解密和加密)，长度为pow(2,n)最佳，长度为pow(2,n)+1最差
 	    *  
 	    * @return   string      字串经过私有密匙解密后的结果
 	    * @throws IOException 

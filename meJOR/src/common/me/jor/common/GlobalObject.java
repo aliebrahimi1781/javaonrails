@@ -18,8 +18,8 @@ public final class GlobalObject {
 	
 	public static final sun.misc.BASE64Encoder BASE64_ENCODER=new sun.misc.BASE64Encoder();
 	public static final sun.misc.BASE64Decoder BASE64_DECODER=new sun.misc.BASE64Decoder();
-	private static ExecutorService executorService;
-	private static ObjectMapper jsonMapper;
+	private volatile static ExecutorService executorService;
+	private volatile static ObjectMapper jsonMapper;
 	
 	/**
 	 * 全局ExecutorService对象，对于基础代码中需要用到的线程池可使用此对象

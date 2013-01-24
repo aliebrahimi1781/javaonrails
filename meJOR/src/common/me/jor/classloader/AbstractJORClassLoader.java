@@ -9,11 +9,13 @@ import java.security.SecureClassLoader;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Lock;
+import java.util.regex.Pattern;
 
 import me.jor.util.LockCache;
 
 
 public abstract class AbstractJORClassLoader extends SecureClassLoader{
+	protected static final Pattern DOT_REGEX=Pattern.compile("\\.");
 	private String startClassName;
 	private boolean startClassInCustomPath;
 	AbstractJORClassLoader(ClassLoader parent, String startClassName, boolean startClassInCustomPath){
@@ -89,7 +91,7 @@ public abstract class AbstractJORClassLoader extends SecureClassLoader{
 	}
 	
 	protected String convertPackagePath(String className){
-		return className.endsWith(".class")?className:className.replaceAll("\\.", "/")+".class";
+		return className.endsWith(".class")?className:DOT_REGEX.matcher(className).replaceAll("/")+".class";
 	}
 	
 	@Override

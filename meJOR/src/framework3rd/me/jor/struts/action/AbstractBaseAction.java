@@ -100,6 +100,13 @@ public abstract class AbstractBaseAction extends ActionSupport {
 		return this.getRequest().getRequestURI();
 	}
 	/**
+	 * 得到发起请求的ip
+	 * @return
+	 */
+	public String getIp(){
+		return Help.getIp(getRequest());
+	}
+	/**
 	 * 获得请求后缀
 	 * @return String
 	 */

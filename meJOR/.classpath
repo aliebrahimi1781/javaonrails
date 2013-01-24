@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="pool/|socket/|common/|test/|ssh/|codereview/|jetty/" kind="src" path="src"/>
+	<classpathentry excluding="pool/|socket/|common/|test/|framework3rd/|codereview/|jetty/|framework3rd/me/jor/dao/impl/" kind="src" path="src"/>
 	<classpathentry kind="src" path="src/common"/>
 	<classpathentry kind="src" path="src/pool"/>
 	<classpathentry kind="src" path="src/socket"/>
 	<classpathentry kind="src" path="src/test"/>
 	<classpathentry kind="src" path="conf"/>
-	<classpathentry kind="src" path="src/ssh"/>
+	<classpathentry excluding="me/jor/dao/impl/" kind="src" path="src/framework3rd"/>
 	<classpathentry kind="src" path="src/codereview"/>
 	<classpathentry kind="src" path="src/jetty"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

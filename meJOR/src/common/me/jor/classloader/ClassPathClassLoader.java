@@ -37,10 +37,9 @@ public class ClassPathClassLoader extends AbstractJORClassLoader {
 	
 //	public static void main(String[] args) throws ClassNotFoundException, IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 //		ClassLoader cl=new ClassPathClassLoader(new File("E:\\class"),ClassPathClassLoader.class.getClassLoader(),"test2",true);
-////		System.out.println(ClassPathClassLoader.class.getClassLoader());
-////		System.out.println(cl.loadClass("test2"));
-////		System.out.println(cl.loadClass("test2").getClassLoader());
+//		System.out.println(ClassPathClassLoader.class.getClassLoader());
+//		System.out.println(cl.loadClass("test2"));
+//		System.out.println(cl.loadClass("test2").getClassLoader());
 //		cl.loadClass("test").getMethod("main",String[].class).invoke(null,new String[1]);
-//		
 //	}
 }

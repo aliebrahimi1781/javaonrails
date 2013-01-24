@@ -28,7 +28,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  * 如果采用sql操作，则指的是主键字段名
  */
 @SuppressWarnings("unchecked")
-public abstract class AbstractHibernateBaseDao extends HibernateTemplate implements InterfaceHibernateDao {
+public class HibernateBaseDao extends HibernateTemplate implements InterfaceHibernateDao {
 	/**
 	 * 分页查询
 	 * @param countQuery 查询符合查询条件的结果集数量
@@ -610,17 +610,12 @@ public abstract class AbstractHibernateBaseDao extends HibernateTemplate impleme
 		return super.execute(new HibernateCallback<T>(){
 			@Override
 			public T doInHibernate(Session session) throws HibernateException,SQLException {
-				return (T)session.createQuery(hql).list().get(0);
+				return (T)getFirstResult(session.createQuery(hql));
 			}
 		});
 	}
 	private <T> T getFirstResult(Query query){
-		List<T> list=query.list();
-		if(Help.isNotEmpty(list)){
-			return list.get(0);
-		}else{
-			return null;
-		}
+		return (T)query.setMaxResults(1).setFirstResult(0).uniqueResult();
 	}
 	/**
 	 * 返回符合条件的第一条结果

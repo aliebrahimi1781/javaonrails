@@ -4,9 +4,11 @@ import java.util.regex.Pattern;
 
 public class RegexUtil {
 	/**类c语法的注释正则表达式*/
-	private static Pattern COMMENT;
-	private static Pattern DIGIT;
-	private static Pattern BASE64;
+	private static volatile Pattern COMMENT;
+	private static volatile Pattern DIGIT;
+	private static volatile Pattern BASE64;
+	private static volatile Pattern blankCharRegex;
+	private static volatile Pattern IP4;
 	
 	private static Pattern getBase64(){
 		if(BASE64==null){
@@ -35,7 +37,7 @@ public class RegexUtil {
 	public static String removeComments(String code){
 		return getCommentRegex().matcher(code).replaceAll("");
 	}
-	private static Pattern blankCharRegex;
+	
 	private static Pattern getBlankCharRegex(){
 		if(blankCharRegex==null){
 			synchronized(RegexUtil.class){
@@ -59,7 +61,7 @@ public class RegexUtil {
 	
 	private static Pattern getDigitRegex(){
 		if(DIGIT==null){
-			synchronized(Pattern.class){
+			synchronized(RegexUtil.class){
 				if(DIGIT==null){
 					DIGIT=Pattern.compile("^(\\d*\\.)?\\d+|\\d+(\\.?\\d*)?$");
 				}
@@ -78,5 +80,19 @@ public class RegexUtil {
 	
 	public static boolean isBase64(String src){
 		return getBase64().matcher(src).matches();
+	}
+	
+	private static Pattern getIp4Regex(){
+		if(IP4==null){
+			synchronized(Pattern.class){
+				if(IP4==null){
+					IP4=Pattern.compile("^(((00)?\\d|[01]?\\d\\d|2[0-4]\\d|25[0-5])\\.){3}((00)?\\d|[01]?\\d\\d|2[0-4]\\d|25[0-5])$");
+				}
+			}
+		}
+		return IP4;
+	}
+	public static boolean isIp4(String src){
+		return getIp4Regex().matcher(src).matches();
 	}
 }
