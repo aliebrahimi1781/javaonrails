@@ -1,12 +1,12 @@
 package me.jor.common;
 
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import me.jor.util.Help;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 此类包含一些全局对象
@@ -53,11 +53,15 @@ public final class GlobalObject {
 	/**
 	 * 通用json解析对象，这是jackson包的入口
 	 */
-	public static ObjectMapper getJsonMapper(){
+	public static ObjectMapper getJsonMapper(JsonFactory... jsonFactory){
 		if(jsonMapper==null){
 			synchronized(ObjectMapper.class){
 				if(jsonMapper==null){
-					jsonMapper=new ObjectMapper();
+					if(Help.isEmpty(jsonFactory)){
+						jsonMapper=new ObjectMapper();
+					}else{
+						jsonMapper=new ObjectMapper(jsonFactory[0]);
+					}
 				}
 			}
 		}

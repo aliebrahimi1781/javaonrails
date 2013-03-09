@@ -1,6 +1,7 @@
 package me.jor.cxf;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
@@ -35,8 +36,8 @@ public abstract class AbstractBaseCXFWS {
 	public HttpServletRequest getRequest(){
 		return (HttpServletRequest)getContextValue(AbstractHTTPDestination.HTTP_REQUEST);
 	}
-	public Object getHttpContext(){
-		return getContextValue(AbstractHTTPDestination.HTTP_CONTEXT);
+	public ServletContext getHttpContext(){
+		return (ServletContext)getContextValue(AbstractHTTPDestination.HTTP_CONTEXT);
 	}
 	/**
 	 * 得到发起请求的ip
@@ -46,6 +47,6 @@ public abstract class AbstractBaseCXFWS {
 		return Help.getIp(getRequest());
 	}
 	public String getRealPath(String path){
-		return getRequest().getRealPath(path);
+		return getHttpContext().getRealPath(path);
 	}
 }

@@ -28,7 +28,7 @@ import me.jor.util.policy.ClearPolicy;
  * 用于缓存创建的所有缓存对象。<br/>
  * 缓存清除策略是全局的，所有缓存对象使用相同的缓存清除策略，一旦修改清除策略，所有缓存对象都会受到影响
  * */
-public class Cache<E> {
+public class Cache<K,E> {
 	/**
 	 * 软引用对象
 	 */
@@ -37,15 +37,15 @@ public class Cache<E> {
 	/**
 	 * 缓存对象
 	 */
-	private static SoftReference<Cache<Cache<?>>> cachecache=new SoftReference<Cache<Cache<?>>>(new Cache<Cache<?>>(CACHECACHE_NAME));
-	private static <T> Cache<Cache<?>> getCachecache(){
-		Cache<Cache<?>> cc=cachecache.get();
+	private static SoftReference<Cache<String,Cache<?,?>>> cachecache=new SoftReference<Cache<String,Cache<?,?>>>(new Cache<String,Cache<?,?>>(CACHECACHE_NAME));
+	private static <T> Cache<String,Cache<?,?>> getCachecache(){
+		Cache<String,Cache<?,?>> cc=cachecache.get();
 		if(cc==null){
 			synchronized(Cache.class){
 				cc=cachecache.get();
 				if(cc==null){
-					cc=new Cache<Cache<?>>(CACHECACHE_NAME);
-					cachecache=new SoftReference<Cache<Cache<?>>>(cc);
+					cc=new Cache<String,Cache<?,?>>(CACHECACHE_NAME);
+					cachecache=new SoftReference<Cache<String,Cache<?,?>>>(cc);
 				}
 			}
 		}
@@ -110,20 +110,24 @@ public class Cache<E> {
 	/**
 	 * 缓存map
 	 */
-	private final Map<SoftReference<String>,SoftReference<E>> cache=new HashMap<SoftReference<String>,SoftReference<E>>();
-	private static ClearPolicy<Cache<?>> clearPolicy;
+	private final Map<SoftReference<K>,SoftReference<E>> cache=new HashMap<SoftReference<K>,SoftReference<E>>();
+	private static ClearPolicy<Cache<?,?>> clearPolicy;
 	private String name;
 	private Cache(String name){
 		this.name=name;
 	}
 	/**
-	 * 如果缓存中存入相同的软应用对象，清除缓存
+	 * 清除空的软引用对象
 	 *  void
 	 * @throws 
 	 * @exception
 	 */
-	private void clear(){
+	private void clearEmptyReference(){
 		clearPolicy.clear(this);
+	}
+	
+	private K pretreatKey(K key){
+		return (K)(key instanceof String?((String)key).toLowerCase():key);
 	}
 	/**
 	 * 向缓存添加新值，并返回相同key的原值
@@ -134,16 +138,16 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public E put(String key, E value){
-		return put(new StringSoftReference(key.toLowerCase()), new HashAndEqualsSoftReference<E>(value));
+	public E put(K key, E value){
+		return put(new HashAndEqualsSoftReference(pretreatKey(key)), new HashAndEqualsSoftReference<E>(value));
 	}
-	private E put(SoftReference<String> srk, SoftReference<E> srv){
+	private E put(SoftReference<K> srk, SoftReference<E> srv){
 		try{
 			lock.writeLock().lock();
 			SoftReference<E> sre=cache.put(srk,srv);
 			return sre==null?null:sre.get();
 		}finally{
-			clear();
+			clearEmptyReference();
 			lock.writeLock().unlock();
 		}
 	}
@@ -157,8 +161,8 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public E putIfAbsent(String key, E value){
-		return putIfAbsent(new StringSoftReference(key.toLowerCase()),new HashAndEqualsSoftReference<E>(value));
+	public E putIfAbsent(K key, E value){
+		return putIfAbsent(new HashAndEqualsSoftReference(pretreatKey(key)),new HashAndEqualsSoftReference<E>(value));
 	}
 	/**
 	 * 如果srv或srk包含一个空引用，则尽量不会执行插入，并返回原值,不过这一行为由于受到gc的影响，而不能控制gc时机，因此此行为不能得到保证。
@@ -169,20 +173,20 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	private E putIfAbsent(SoftReference<String> srk, SoftReference<E> srv){
+	private E putIfAbsent(SoftReference<K> srk, SoftReference<E> srv){
 		try{
 			lock.writeLock().lock();
 			SoftReference<E> sre=cache.get(srk);
 			E e=sre==null?null:sre.get();
 			E e2=srv.get();
-			String k=srk.get();
+			K k=srk.get();
 			if(e==null && k!=null && e2!=null){
 				cache.put(srk,srv);
 				return e2;
 			}
 			return e;
 		}finally{
-			clear();
+			clearEmptyReference();
 			lock.writeLock().unlock();
 		}
 	}
@@ -195,11 +199,11 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public E replace(String key, E value){
+	public E replace(K key, E value){
 		try{
 			lock.writeLock().lock();
-			clear();
-			SoftReference<String> srk=new StringSoftReference(key.toLowerCase());
+			clearEmptyReference();
+			SoftReference<K> srk=new HashAndEqualsSoftReference(pretreatKey(key));
 			SoftReference<E> sre=cache.get(srk);
 			E e=sre==null?null:sre.get();
 			if(e!=null){
@@ -222,11 +226,11 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public boolean replace(String key, E oldVal, E newVal){
+	public boolean replace(K key, E oldVal, E newVal){
 		try{
 			lock.writeLock().lock();
-			clear();
-			SoftReference<String> srk=new StringSoftReference(key.toLowerCase());
+			clearEmptyReference();
+			SoftReference<K> srk=new HashAndEqualsSoftReference(pretreatKey(key));
 			SoftReference<E> sre=cache.get(srk);
 			E e=sre==null?null:sre.get();
 			if(oldVal.equals(e)){
@@ -246,11 +250,11 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public E remove(String key){
+	public E remove(K key){
 		try{
 			lock.writeLock().lock();
-			clear();
-			SoftReference<E> sre=cache.remove(new StringSoftReference(key.toLowerCase()));
+			clearEmptyReference();
+			SoftReference<E> sre=cache.remove(new HashAndEqualsSoftReference(pretreatKey(key)));
 			return sre==null?null:sre.get();
 		}finally{
 			lock.writeLock().unlock();
@@ -264,11 +268,11 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public boolean remove(String key, E val){
+	public boolean remove(K key, E val){
 		try{
 			lock.writeLock().lock();
-			clear();
-			SoftReference<String> sr=new StringSoftReference(key.toLowerCase());
+			clearEmptyReference();
+			SoftReference<K> sr=new HashAndEqualsSoftReference(pretreatKey(key));
 			SoftReference<E> sre=cache.get(sr);
 			E e=sre==null?null:sre.get();
 			if(val.equals(e)){
@@ -287,11 +291,11 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public E get(String key){
+	public E get(K key){
 		try{
 			lock.readLock().lock();
-			clear();
-			SoftReference<E> sre=cache.get(new StringSoftReference(key.toLowerCase()));
+			clearEmptyReference();
+			SoftReference<E> sre=cache.get(new HashAndEqualsSoftReference(pretreatKey(key)));
 			return sre==null?null:sre.get();
 		}finally{
 			lock.readLock().unlock();
@@ -304,13 +308,21 @@ public class Cache<E> {
 	 * @throws 
 	 * @exception
 	 */
-	public boolean contains(String key){
+	public boolean contains(K key){
 		try{
 			lock.readLock().lock();
-			clear();
-			return cache.containsKey(new StringSoftReference(key.toLowerCase()));
+			clearEmptyReference();
+			return cache.containsKey(new HashAndEqualsSoftReference(pretreatKey(key)));
 		}finally{
 			lock.readLock().unlock();
+		}
+	}
+	public void clear(){
+		try{
+			lock.writeLock().lock();
+			cache.clear();
+		}finally{
+			lock.writeLock().unlock();
 		}
 	}
 	/**
@@ -322,7 +334,7 @@ public class Cache<E> {
 	public int size(){
 		try{
 			lock.readLock().lock();
-			clear();
+			clearEmptyReference();
 			return cache.size();
 		}finally{
 			lock.readLock().unlock();
@@ -341,22 +353,22 @@ public class Cache<E> {
 	 * @exception
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Cache<T> getCache(String cachename){
+	public static <K,T> Cache<K,T> getCache(String cachename){
 		cachename=cachename.toLowerCase();
-		Cache<Cache<?>> cc=getCachecache();
-		Cache<T> c=(Cache<T>)cc.get(cachename);
+		Cache<String,Cache<?,?>> cc=getCachecache();
+		Cache<K,T> c=(Cache<K,T>)cc.get(cachename);
 		if(c==null){
 			synchronized(cc){
-				c=(Cache<T>)cc.get(cachename);
+				c=(Cache<K,T>)cc.get(cachename);
 				if(c==null){
-					c=new Cache<T>(cachename);
+					c=new Cache<K,T>(cachename);
 					cc.put(cachename, c);
 				}
 			}
 		}
 		return c;
 	}
-	public static abstract class AbstractCommonCacheClearPolicy<E> implements ClearPolicy<Cache<E>>{
+	public static abstract class AbstractCommonCacheClearPolicy<K,E> implements ClearPolicy<Cache<K,E>>{
 		private Set<String> nameSet=new HashSet<String>();
 		private boolean putIfAbsent(String name){
 			synchronized(nameSet){
@@ -374,26 +386,26 @@ public class Cache<E> {
 			}
 		}
 		@Override
-		public void clear(Cache<E> cache) {
+		public void clear(Cache<K,E> cache) {
 			String name=cache.name;
 			if(putIfAbsent(name)){
 				innerClear(cache);
 				remove(name);
 			}
 		}
-		protected abstract void innerClear(Cache<E> cache);
+		protected abstract void innerClear(Cache<K,E> cache);
 	}
 	/**
 	 * 清除空引用的实际算法
 	 * @param <E> 缓存对象内保存的对象范型类型
 	 */
-	public static class ClearInCurrentThreadPolicy<E> extends AbstractCommonCacheClearPolicy<E>{
+	public static class ClearInCurrentThreadPolicy<K,E> extends AbstractCommonCacheClearPolicy<K,E>{
 		@Override
-		protected void innerClear(Cache<E> cache){
-			Map<SoftReference<String>, SoftReference<E>> map=cache.cache;
+		protected void innerClear(Cache<K,E> cache){
+			Map<SoftReference<K>, SoftReference<E>> map=cache.cache;
 			while(remove(map, cache)!=null);
 		}
-		private Object remove(Map<SoftReference<String>,SoftReference<E>> map, Cache cache){
+		private Object remove(Map<SoftReference<K>,SoftReference<E>> map, Cache cache){
 			synchronized(cache){
 				return map.remove(nullRef);
 			}
@@ -403,14 +415,14 @@ public class Cache<E> {
 	 * 发现空引用时清除所有缓存对象
 	 * @param <E> 缓存的对象类型
 	 */
-	public static class ClearAllOnNullFoundPolicy<E> extends AbstractCommonCacheClearPolicy<E>{
-		protected void innerClear(Cache<E> cache){
-			Map<SoftReference<String>,SoftReference<E>> map=cache.cache;
+	public static class ClearAllOnNullFoundPolicy<K,E> extends AbstractCommonCacheClearPolicy<K,E>{
+		protected void innerClear(Cache<K,E> cache){
+			Map<SoftReference<K>,SoftReference<E>> map=cache.cache;
 			if(map.containsKey(nullRef) || map.containsValue(nullRef)){
 				clear(map,cache);
 			}
 		}
-		private void clear(Map<SoftReference<String>,SoftReference<E>> map, Cache cache){
+		private void clear(Map<SoftReference<K>,SoftReference<E>> map, Cache cache){
 			synchronized(cache){
 				map.clear();
 			}
@@ -420,7 +432,7 @@ public class Cache<E> {
 	 * 变更清除Cache内部缓存对象(cachecache)的空引用策略
 	 * @param clearPolicy 清除内部缓存对象的空引用策略
 	 */
-	public static void changeClearPolicy(ClearPolicy<Cache<?>> clearPolicy){
+	public static void changeClearPolicy(ClearPolicy<Cache<?,?>> clearPolicy){
 		Cache.clearPolicy=clearPolicy;
 	}
 	/**
@@ -428,7 +440,7 @@ public class Cache<E> {
 	 * @param clearExecutor 执行清除空引用策略的线程池
 	 */
 	public static void changeClearPolicy(Executor clearExecutor){
-		changeClearPolicy(new ClearByExecutorPolicy<Cache<?>>(clearExecutor, new ClearInCurrentThreadPolicy()));
+		changeClearPolicy(new ClearByExecutorPolicy<Cache<?,?>>(clearExecutor, new ClearInCurrentThreadPolicy()));
 	}
 	static{
 		changeClearPolicy(new ClearInCurrentThreadPolicy());

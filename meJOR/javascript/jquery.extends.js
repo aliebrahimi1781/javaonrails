@@ -761,6 +761,32 @@
 		 * 用户登出
 		 * @param args
 		 */
-	    logout:function(args){$.get($.concatUrl('/','logout'),function(){delete $.loggedUserid.userid;$.cookie($.loggedUserHeader,null);$.initLoginView(args);});}
+	    logout:function(args){$.get($.concatUrl('/','logout'),function(){delete $.loggedUserid.userid;$.cookie($.loggedUserHeader,null);$.initLoginView(args);});},
+	  /**
+	   * 
+	   */
+	  passwordStrength:function(password,username,requiredLen){
+	  	var SHORT_PASS=1,BAD_PASS=2,GOOD_PASS=3,STRONG_PASS=4;
+	  	var fn=function(password,username,requiredLen){
+	  		var shortPass = SHORT_PASS, badPass = BAD_PASS, goodPass = GOOD_PASS, strongPass = STRONG_PASS, symbolSize = 0, natLog, score,passLen=password.length;  
+		    if (passLen < requiredLen ) { return shortPass };  
+		    if (password.toLowerCase()==username.toLowerCase()) return badPass;  
+		    if (password.match(/[0-9]/)) symbolSize +=10;  
+		    if (password.match(/[a-z]/)) symbolSize +=26;  
+		    if (password.match(/[A-Z]/)) symbolSize +=26;  
+		    if (password.match(/[^a-zA-Z0-9]/)) symbolSize +=31;  
+		    natLog = Math.log( Math.pow(symbolSize,passLen) );  
+		    score = natLog / Math.LN2;  
+		    if (score < 40 )  return badPass  
+		    if (score < 56 )  return goodPass  
+		    return strongPass;  
+	  	};
+	    fn.shortPass=SHORT_PASS;
+	    fn.badPass=BAD_PASS;
+	    fn.goodPass=GOOD_PASS;
+	    fn.strongPass=STRONG_PASS;
+	    $.passwordStrength=fn;
+	    return fn(password,username);
+		}
 	});
 })(jQuery);

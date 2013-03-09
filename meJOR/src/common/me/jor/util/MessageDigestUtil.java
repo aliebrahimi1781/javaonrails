@@ -93,7 +93,7 @@ public class MessageDigestUtil{
 				//0x00&bitmask==>>"0" 0x0a&bitmask==>>"a"
 				//but we want 0x00&bitmask==>>"00"
 				//(b>>4)&bitmask is necessary, or b>>>4 will be a very large number if b is less than 0
-				result.append(HEXBUF[b&bitmask]).append(HEXBUF[(b>>4)&bitmask]);
+				result.append(HEXBUF[(b>>4)&bitmask]).append(HEXBUF[b&bitmask]);
 			}
 			return result.toString();
 		default:

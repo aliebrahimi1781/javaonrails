@@ -4,6 +4,7 @@ package me.jor.classloader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -17,8 +18,13 @@ public class ClassPathClassLoader extends AbstractJORClassLoader {
 	}
 
 	@Override
-	protected InputStream getBytecodeInputStream(String name) throws FileNotFoundException {
-		return new FileInputStream(new File(classpath,super.convertPackagePath(name)));
+	protected InputStream getBytecodeInputStream(String name) throws ClassNotFoundException, IOException {
+		File classFile=new File(classpath,super.convertPackagePath(name));
+		if(classFile.exists()){
+			return new FileInputStream(classFile);
+		}else{
+			return super.openLibInputStream(name);
+		}
 	}
 	
 	@Override

@@ -2,10 +2,17 @@ package me.jor.util.policy;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import me.jor.common.Task;
+import me.jor.util.Log4jUtil;
+import me.jor.util.concurrent.ExecutingOnce;
+
+import org.apache.commons.logging.Log;
+
 /**
  * 创建新线程清除空引用
  */
 public abstract class ClearInNewThreadPolicy<E> implements ClearPolicy<E>{
+	private  static final Log log=Log4jUtil.getLog(ClearInNewThreadPolicy.class);
 	protected AtomicBoolean notClearing=new AtomicBoolean(true);
 	private ClearPolicy<E> clearPolicy;
 	
@@ -31,7 +38,18 @@ public abstract class ClearInNewThreadPolicy<E> implements ClearPolicy<E>{
 			this.o=o;
 		}
 		public void run(){
-			clearPolicy.clear((E)o);
+			try {
+				ExecutingOnce.executeAndReturnImmediately(ClearInNewThreadPolicy.class.getName(), new Task(){
+					@Override
+					public <T> T execute() throws Throwable {
+						clearPolicy.clear((E)o);
+						return null;
+					}
+					
+				});
+			} catch (Throwable e) {
+				log.error(e.getMessage(),e);
+			}
 		}
 	};
 }

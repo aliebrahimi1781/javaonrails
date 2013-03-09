@@ -4,6 +4,7 @@ package me.jor.classloader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class JarFileClassLoader extends AbstractJORClassLoader {
@@ -15,8 +16,13 @@ public class JarFileClassLoader extends AbstractJORClassLoader {
 	}
 
 	@Override
-	protected InputStream getBytecodeInputStream(String name) throws IOException {
-		return jar.getInputStream(jar.getJarEntry(super.convertPackagePath(name)));
+	protected InputStream getBytecodeInputStream(String name) throws IOException, ClassNotFoundException {
+		JarEntry entry=jar.getJarEntry(super.convertPackagePath(name));
+		if(entry!=null){
+			return jar.getInputStream(entry);
+		}else{
+			return super.openLibInputStream(name);
+		}
 	}
 
 	@Override

@@ -149,10 +149,9 @@ public interface InterfaceHibernateDao {
 			SecurityException, NoSuchMethodException, IllegalArgumentException,
 			InvocationTargetException;
 
-	public abstract <T> T updateById(T entity, String idname, UpdateFieldTag tag);
+	public abstract <T> T updateById(T entity, String idname, UpdateFieldTag tag, String... ignoredFields);
 
-	public abstract int updateByIds(Object entity, Serializable[] ids,
-			String idname, UpdateFieldTag tag);
+	public abstract int updateByIds(Object entity, Serializable[] ids, String idname, UpdateFieldTag tag, String... ignoredFields);
 
 	@SuppressWarnings("rawtypes")
 	public abstract int updateByIds(Class entityClass, Serializable[] ids,

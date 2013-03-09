@@ -4,6 +4,7 @@ package me.jor.classloader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureClassLoader;
 import java.util.Enumeration;
@@ -24,7 +25,7 @@ public abstract class AbstractJORClassLoader extends SecureClassLoader{
 		this.startClassInCustomPath=startClassInCustomPath;
 	}
 	
-	protected abstract InputStream getBytecodeInputStream(String name) throws IOException;
+	protected abstract InputStream getBytecodeInputStream(String name) throws MalformedURLException, ClassNotFoundException, IOException;
 	protected abstract URL findJORResource(String name);
 	
 	private byte[] loadBytecode(InputStream in) throws IOException{
@@ -44,12 +45,12 @@ public abstract class AbstractJORClassLoader extends SecureClassLoader{
 			baos.close();
 		}
 	}
-	private byte[] getBytecode(String name) throws IOException{
+	private byte[] getBytecode(String name) throws IOException, ClassNotFoundException{
 		InputStream in=null;
 		if((!name.equals(startClassName)) || startClassInCustomPath){
 			in=getBytecodeInputStream(name);
 		}else{
-			in=super.getParent().getResourceAsStream(convertPackagePath(name));
+			in=openLibInputStream(name);
 		}
 		if(in!=null){
 			try{
@@ -62,12 +63,16 @@ public abstract class AbstractJORClassLoader extends SecureClassLoader{
 		}
 	}
 	
-	private Class<?> findJORClass(String name) throws IOException, ClassFormatError{
+	private boolean toLoad(Class c, String name){
+		return c==null || (c.getClassLoader()!=this && name.equals(this.startClassName));
+	}
+	
+	private Class<?> findJORClass(String name) throws IOException, ClassFormatError, ClassNotFoundException{
 		Lock lock=LockCache.getReentrantLock("me.jor.classloader.JORClassLoader-"+name);
 		try{
 			lock.lock();
 			Class c=super.findLoadedClass(name);
-			if(c==null){
+			if(toLoad(c,name)){
 				byte[] bytecode=getBytecode(name);
 				c=super.defineClass(name, bytecode, 0, bytecode.length);
 			}
@@ -81,7 +86,7 @@ public abstract class AbstractJORClassLoader extends SecureClassLoader{
 	public Class<?> loadClass(String name)throws ClassNotFoundException{
 		try{
 			Class c=super.findLoadedClass(name);
-			if(c==null){
+			if(toLoad(c,name)){
 				c=findJORClass(name);
 			}
 			return c;
@@ -92,6 +97,10 @@ public abstract class AbstractJORClassLoader extends SecureClassLoader{
 	
 	protected String convertPackagePath(String className){
 		return className.endsWith(".class")?className:DOT_REGEX.matcher(className).replaceAll("/")+".class";
+	}
+	
+	protected InputStream openLibInputStream(String name) throws ClassNotFoundException, IOException{
+		return super.getParent().getResourceAsStream(convertPackagePath(name));
 	}
 	
 	@Override

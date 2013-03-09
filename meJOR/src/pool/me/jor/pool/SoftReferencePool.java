@@ -112,8 +112,8 @@ public class SoftReferencePool<E> {
 	 * @param lockName  锁名
 	 * @return SoftReferencePool<E>
 	 */
-	public static <E> SoftReferencePool<E> getPool(String poolName,String lockName){
-		Cache<SoftReferencePool<E>> poolCache=Cache.getCache("me.jor.pool.SoftReferencePool.getPool");
+	public static <K,E> SoftReferencePool<E> getPool(K poolName,String lockName){
+		Cache<K,SoftReferencePool<E>> poolCache=Cache.getCache("me.jor.pool.SoftReferencePool.getPool");
 		SoftReferencePool<E> pool=poolCache.get(poolName);
 		if(pool==null){
 			poolCache.putIfAbsent(poolName, new SoftReferencePool<E>(lockName));

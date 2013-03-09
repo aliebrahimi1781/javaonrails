@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -224,6 +225,17 @@ public class Help {
 		return txtToDate(date, datetimeFormat);
 	}
 	/**
+	 * 得到当天00:00:00.000的时刻
+	 */
+	public static Date today(){
+		Calendar c=Calendar.getInstance();
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE,0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+		return c.getTime();
+	}
+	/**
 	 * 判断字符串是否为空
 	 * @param src 需判断的字符串
 	 * @return boolean 
@@ -297,7 +309,7 @@ public class Help {
 	 * @return
 	 */
 	public static boolean isEmptyOrNull(String src){
-		return isEmpty(src) || "null".equalsIgnoreCase(src);
+		return isEmpty(src) || "null".equalsIgnoreCase(src) || "nil".equalsIgnoreCase(src);
 	}
 	/**
 	 * 对象为空的判断
@@ -329,7 +341,7 @@ public class Help {
 	 * @exception
 	 */
 	public static boolean isEmpty(Collection<?> collection){
-		return collection==null || collection.size()==0;
+		return collection==null || collection.isEmpty();
 	}
 	/**
 	 * Map为空的判断
@@ -339,7 +351,7 @@ public class Help {
 	 * @exception
 	 */
 	public static boolean isEmpty(Map<?,?> map){
-		return map==null || map.size()==0;
+		return map==null || map.isEmpty();
 	}
 	/**
 	 * 数组为空的判断
@@ -523,6 +535,25 @@ public class Help {
 	@SuppressWarnings("rawtypes")
 	public static String concat(Collection src, String seperator){
 		return concat(src, seperator, false);
+	}
+	/**
+	 * 把src连接成以seperator分隔的字符串，且不以seperator结尾
+	 * @param src
+	 * @param seperator
+	 * @return
+	 */
+	public static String concat(Object[] src, String seperator){
+		return concat(Arrays.asList(src),seperator);
+	}
+	/**
+	 * 把src连接成以seperator分隔的字符串
+	 * @param src
+	 * @param seperator
+	 * @param endsWithSeperator  true:以seperator结尾，false:不以seperator结尾
+	 * @return
+	 */
+	public static String concat(Object[] src, String seperator, boolean endsWithSeperator){
+		return concat(Arrays.asList(src),seperator,endsWithSeperator);
 	}
 	/**
 	 * 把src连接成以seperator分隔的字符串，endsWithSeperator指示是否以seperator结尾
@@ -1354,6 +1385,26 @@ public class Help {
 	public static <T> T writeSync(String key, Callable<T> callable) throws Exception{
 		return sync(callable, LockCache.getWriteLock(key));
 	}
+	
+	/**
+     * 从ip的字符串形式得到字节数组形式
+     * @param ip 字符串形式的ip
+     * @return 字节数组形式的ip
+     */
+    public static byte[] getIpByteArrayFromString(String ip) {
+        StringTokenizer st = new StringTokenizer(ip, ".");
+        return new byte[]{(byte)(Integer.parseInt(st.nextToken()) & 0xFF),
+        		          (byte)(Integer.parseInt(st.nextToken()) & 0xFF),
+        		          (byte)(Integer.parseInt(st.nextToken()) & 0xFF),
+        		          (byte)(Integer.parseInt(st.nextToken()) & 0xFF)};
+    }
+    /**
+     * @param ip ip的字节数组形式
+     * @return 字符串形式的ip
+     */
+    public static String getIpStringFromBytes(byte[] ip) {
+    	return ""+(ip[0]&0xff)+'.'+(ip[1]&0xff)+'.'+(ip[2]&0xff)+'.'+(ip[3]&0xff);
+    }
 	/**
 	 * 获得参数的所有属性并格式化成字符串
 	 * 不要试图用这个方法重写类的toString()方法，这个方法仅用于测试时方便把对象字符串化输出到控制台。

@@ -23,6 +23,7 @@
 	<constant name="struts.enable.SlashesInActionNames" value="true"/>
 	<constant name="struts.serve.static.browserCache" value="false" />
 	<constant name="struts.configuration.xml.reload" value="true" />
+	<constant name="struts.objectFactory" value="spring" />
 	<!-- global package -->
 	<package name="dev-default" extends="json-default">
 		<result-types>

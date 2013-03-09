@@ -3,6 +3,8 @@ package me.jor.hibernate;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 
+import me.jor.hibernate3.HibernateBaseDao;
+
 import org.springframework.dao.DataAccessException;
 
 public class CommonService {

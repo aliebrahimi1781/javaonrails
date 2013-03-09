@@ -42,8 +42,8 @@ public class LockCache {
 	 * @throws 
 	 * @exception
 	 */
-	public static ReentrantReadWriteLock getReadWriteLock(String name){
-		Cache<ReentrantReadWriteLock> cache=Cache.getCache(RW_LOCK_CACHE);
+	public static <K> ReentrantReadWriteLock getReadWriteLock(K name){
+		Cache<K,ReentrantReadWriteLock> cache=Cache.getCache(RW_LOCK_CACHE);
 		
 		ReentrantReadWriteLock lock=cache.get(name);
 		if(lock!=null){
@@ -60,10 +60,10 @@ public class LockCache {
 	 * @throws 
 	 * @exception
 	 */
-	private static Lock get(String name, int lockType){
+	private static <K> Lock get(K name, int lockType){
 		switch(lockType){
 		case REENTRANT_LOCK:
-			Cache<Lock> cache=Cache.getCache(LOCK_CACHE);
+			Cache<K,Lock> cache=Cache.getCache(LOCK_CACHE);
 			Lock lock=cache.get(name);
 			if(lock!=null){
 				return lock;
