@@ -574,7 +574,7 @@ public class IPSeeker {
 	}
 	
 	public static IPSeeker getInstance(IPSeeker earlier) throws URISyntaxException, IOException{
-		return getInstance(earlier,CommonConstant.getPROPERTIES().getProperty(IPDAT_NAME));
+		return getInstance(earlier,Help.convert(CommonConstant.getPROPERTIES().getProperty(IPDAT_NAME),"ip.dat"));
 	}
 	public static IPSeeker getInstance(String srcName) throws URISyntaxException, IOException{
 		return getInstance(null,srcName);
@@ -595,9 +595,10 @@ public class IPSeeker {
 		return earlier;
 	}
 //	
-//	public static void main(String[] args) throws IOException, URISyntaxException {
-//		System.out.println("山東省".substring("山東省".length()));
-//		IPSeeker seeker=getInstance("ip.dat");
+	public static void main(String[] args) throws IOException, URISyntaxException {
+		IPSeeker seeker=null;
+		seeker=getInstance(seeker);
+		System.out.println(seeker.getCountry("117.136.44.1"));
 //		BufferedReader br=new BufferedReader(new FileReader("d:/ip.TXT"));
 //		PrintWriter pw=new PrintWriter(new FileWriter("d:/loc.csv"));
 //		String l=null;
@@ -608,5 +609,5 @@ public class IPSeeker {
 //		}
 //		pw.close();
 //		br.close();
-//	}
+	}
 }

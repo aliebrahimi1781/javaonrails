@@ -1,5 +1,7 @@
 package me.jor.util.ip;
 
+import me.jor.util.Help;
+
 
 /** 
  * 
@@ -7,7 +9,8 @@ package me.jor.util.ip;
  */
 
 public class IPLocation {
-	private String[] regions=new String[]{"內蒙古","宁夏","新疆","西藏","广西"};
+	private static final String[] regions=new String[]{"內蒙古","宁夏","新疆","西藏","广西"};
+	private static final String[] municipalities=new String[]{"北京","上海","天津","重庆"};
 	private String country;
 	private String province;
 	private String city;
@@ -51,14 +54,28 @@ public class IPLocation {
 		}else if(province==null){
 			synchronized(this){
 				if(province==null){
-					for(int i=0,l=regions.length;i<l;i++){
+					int i=0,l=regions.length;
+					for(;i<l;i++){
 						String region=regions[i];
 						if(country.indexOf(region)>=0){
 							province=region;
 							break;
 						}
 					}
-					province=country.substring(0,country.indexOf('省')+1);
+					if(i>=l){
+						i=0;
+						l=municipalities.length;
+						for(;i<l;i++){
+							String city=this.municipalities[i];
+							if(country.startsWith(city)){
+								this.province=this.city=city+'市';
+								break;
+							}
+						}
+						if(i>=l){
+							province=country.substring(0,country.indexOf('省')+1);
+						}
+					}
 				}
 			}
 		}
@@ -70,12 +87,28 @@ public class IPLocation {
 			synchronized(this){
 				if(city==null){
 					if(getProvince()!=null){
-						city=country.substring(province.length());
+						if(city==null){
+							city=country.substring(province.length());
+						}
 					}
 				}
 			}
 		}
 		return city;
 	}
+	
+	public boolean isRegion(){
+		return isRegion(getProvince());
+	}
+	
+	public boolean isMunicipality(){
+		return isMunicipality(getCity());
+	}
+	
+	public static boolean isRegion(String province){
+		return Help.contains(regions, province);
+	}
+	public static boolean isMunicipality(String city){
+		return Help.contains(municipalities, city);
+	}
 }
-

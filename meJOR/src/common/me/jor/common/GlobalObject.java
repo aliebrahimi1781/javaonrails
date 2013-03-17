@@ -8,6 +8,8 @@ import me.jor.util.Help;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.undercouch.bson4jackson.BsonFactory;
+
 /**
  * 此类包含一些全局对象
  * 不可实例化，不可继承
@@ -20,7 +22,7 @@ public final class GlobalObject {
 	public static final sun.misc.BASE64Decoder BASE64_DECODER=new sun.misc.BASE64Decoder();
 	private volatile static ExecutorService executorService;
 	private volatile static ObjectMapper jsonMapper;
-	
+	private volatile static ObjectMapper bsonMapper;
 	/**
 	 * 全局ExecutorService对象，对于基础代码中需要用到的线程池可使用此对象
 	 * 常量定义文件的key是：properties.dev.project.globalobject.executorservice取值有：正整数 SINGLE CACHE
@@ -66,5 +68,18 @@ public final class GlobalObject {
 			}
 		}
 		return jsonMapper;
+	}
+	/**
+	 * 通用bson解析对象
+	 */
+	public static ObjectMapper getBsonMapper(){
+		if(bsonMapper==null){
+			synchronized(ObjectMapper.class){
+				if(bsonMapper==null){
+					bsonMapper=new ObjectMapper(new BsonFactory());
+				}
+			}
+		}
+		return bsonMapper;
 	}
 }

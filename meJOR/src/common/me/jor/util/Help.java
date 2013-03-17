@@ -83,19 +83,19 @@ public class Help {
 	/**
 	 * yyyy-MM-dd HH:mm:ss.SSS
 	 * */
-	public static final SimpleDateFormat fullDateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	public static final String fullDateFormat="yyyy-MM-dd HH:mm:ss.SSS";
 	/**
 	 * yyyy-MM-dd HH:mm:ss
 	 * */
-	public static final SimpleDateFormat datetimeFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	public static final String datetimeFormat="yyyy-MM-dd HH:mm:ss";
 	/**
 	 * yyyy-MM-dd日期格式
 	 * */
-	public static final SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd");
+	public static final String dateFormat="yyyy-MM-dd";
 	/**
 	 * HH:mm:ss时间格式
 	 * */
-	public static final SimpleDateFormat timeFormat=new SimpleDateFormat("HH:mm:ss");
+	public static final String timeFormat="HH:mm:ss";
 	/**
 	 * 按照yyyy-MM-dd HH:mm:ss格式转换当前时间
 	 * @throws 
@@ -364,6 +364,66 @@ public class Help {
 		return array==null || array.length==0;
 	}
 	/**
+	 * 判断value是否包含在array内
+	 * @param array
+	 * @param value
+	 * @return
+	 */
+	public static boolean contains(Object[] array,Object value){
+		for(int i=0,l=array.length;i<l;i++){
+			Object o=array[i];
+			if((o==null && value==null) || (o!=null && o.equals(value))){
+				return true;
+			}
+		}
+		return false;
+	}
+	public static boolean contains(String[] array,String value){
+		for(int i=0,l=array.length;i<l;i++){
+			Object o=array[i];
+			if((o==null && value==null) || (o!=null && o.equals(value))){
+				return true;
+			}
+		}
+		return false;
+	}
+	public static boolean contains(int[] array,int value){
+		for(int i=0,l=array.length;i<l;i++){
+			int o=array[i];
+			if(o==value){
+				return true;
+			}
+		}
+		return false;
+	}
+	public static boolean contains(long[] array,long value){
+		for(int i=0,l=array.length;i<l;i++){
+			long o=array[i];
+			if(o==value){
+				return true;
+			}
+		}
+		return false;
+	}
+	public static boolean contains(Long[] array,Long value){
+		for(int i=0,l=array.length;i<l;i++){
+			Long o=array[i];
+			if((o==null && value==null) || (o!=null && o.equals(value))){
+				return true;
+			}
+		}
+		return false;
+	}
+	public static boolean contains(Integer[] array,Integer value){
+		for(int i=0,l=array.length;i<l;i++){
+			Integer o=array[i];
+			if((o==null && value==null) || (o!=null && o.equals(value))){
+				return true;
+			}
+		}
+		return false;
+	}
+	/**
 	 * 如果src==null，返回dst中第一个不是null的参数，否则返回src
 	 * @param src 
 	 * @param dst
@@ -372,8 +432,12 @@ public class Help {
 	 * @exception
 	 */
 	public static Object convert(Object src, Object... dst){
-		int i=0;
-		while(src==null){
+		int i=0,l=dst.length;
+		while(i<l && (src==null || 
+			  (src instanceof Number && ((Number)src).intValue()==0) || 
+			  "".equals(src) || 
+			  (src instanceof Collection && ((Collection)src).isEmpty()) || 
+			  (src instanceof Map && ((Map)src).isEmpty()))){
 			src=dst[i++];
 		}
 		return src;
@@ -388,8 +452,12 @@ public class Help {
 	 * @exception
 	 */
 	public static <T extends Number> T convert(T src, T... dst){
-		int i=0;
-		while(src==null || src.intValue()==0){
+		int i=0,l=dst.length;
+		while(i<l && (src==null || 
+			  src.intValue()==0 && (src instanceof Long || src instanceof Integer || src instanceof AtomicInteger || src instanceof AtomicLong || src instanceof BigInteger) ||
+			 (src instanceof Double && ((Double)src).compareTo(0.0)==0) || 
+			 (src instanceof Float && ((Float)src).compareTo(0.0f)==0) ||
+			 (src instanceof BigDecimal && ((BigDecimal)src).compareTo(BigDecimal.ZERO)==0))){
 			src=dst[i++];
 		}
 		return src;
@@ -404,7 +472,7 @@ public class Help {
 	 */
 	public static String convert(String src, String... dst){
 		int i=0,l=dst.length;
-		while(Help.isEmpty(src) && i<l){
+		while(i<l && Help.isEmpty(src)){
 			src=dst[i++];
 		}
 		return src;

@@ -725,30 +725,42 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 			}
 			String idgetter = "get" + idname.substring(0, 1).toUpperCase() + idname.substring(1);
 			Serializable id = (Serializable) cls.getMethod(idgetter).invoke(entity);
-			Object persisted = session.get(cls.getName(), id);
-			if(persisted!=null){
-				Method[] ms = cls.getMethods();
-				boolean updated = false;
-				for (int i = 0; i < ms.length; i++) {
-					Method m = ms[i];
-					String mn = m.getName();
-					String fn=mn.substring(3);
-					if (!ignored.contains(Character.toLowerCase(fn.charAt(0))+fn.substring(1)) && 
-							mn.startsWith("get") && !mn.equals("getClass") && !mn.equals(idgetter)) {
-						Object v = m.invoke(entity);
-						if (((v!=null && !"".equals(v) && tag.equals(UpdateFieldTag.UPDATE_NOT_EMPTY))) || 
-							((v!=null && tag.equals(UpdateFieldTag.UPDATE_NOT_NULL))) || 
-							  tag.equals(UpdateFieldTag.UPDATE_ALL)) {
-							cls.getMethod("set" + fn,m.getReturnType()).invoke(persisted, v);
-							updated = true;
-						}
+			StringBuilder hql=new StringBuilder("update "+cls.getName()+" set ");
+			Method[] ms = cls.getMethods();
+			Map<String,Method> mm=new HashMap<String,Method>();
+			Map<String,Object> nvm=new HashMap<String,Object>();
+			boolean updated = false;
+			Object persist=session.get(cls,id);
+			for(int i=0,l=ms.length;i<l;i++){
+				Method m = ms[i];
+				String mn = m.getName();
+				String fn=mn.substring(3);
+				fn=Character.toLowerCase(fn.charAt(0))+fn.substring(1);
+				if(mn.startsWith("set")){
+					mm.put(mn, m);
+				}
+				if (!ignored.contains(fn) && 
+						mn.startsWith("get") && !mn.equals("getClass") && !mn.equals(idgetter)) {
+					Object v = m.invoke(entity);
+					boolean pvNeq = !(v==null || v.equals(m.invoke(entity)));
+					if (((pvNeq && !"".equals(v) && tag.equals(UpdateFieldTag.UPDATE_NOT_EMPTY))) || 
+						((pvNeq && tag.equals(UpdateFieldTag.UPDATE_NOT_NULL))) || 
+						  tag.equals(UpdateFieldTag.UPDATE_ALL)) {
+						hql.append(fn+"=:"+fn+',');
+						nvm.put('s'+mn.substring(1), v);
+						updated = true;
 					}
 				}
-				if (updated) {
-					session.update(persisted);
-				}
 			}
-			return (T)persisted;
+			for(Map.Entry<String, Object> nve:nvm.entrySet()){
+				mm.get(nve.getKey()).invoke(persist, nve.getValue());
+			}
+			if(updated){
+				int hqllen=hql.length();
+				hql.delete(hqllen-1,hqllen).append(" where ").append(idname).append("=:").append(idname);
+				this.bulkUpdate(hql.toString(), entity);
+			}
+			return (T)persist;
 		} catch (Exception e) {
 			throw new CUDException(e);
 		}
