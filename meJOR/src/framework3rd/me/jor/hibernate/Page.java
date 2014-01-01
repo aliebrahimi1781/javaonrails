@@ -1,6 +1,9 @@
 package me.jor.hibernate;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import me.jor.util.Help;
 
 /**
  * 与me.jor.hibernate.AbstractHibernateBaseDao一起使用。<br/>
@@ -25,7 +28,7 @@ public class Page<T> {
 	}
 	
 	public List<T> getList() {
-		return list;
+		return (List<T>)Help.convert(list, new ArrayList<T>(0));
 	}
 	public void setList(List<T> list) {
 		this.list = list;

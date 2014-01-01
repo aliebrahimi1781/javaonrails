@@ -13,12 +13,15 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import me.jor.common.CommonConstant;
 import me.jor.exception.IllegalIPFileException;
 import me.jor.util.Cache;
 import me.jor.util.Help;
 
 public class IPSeeker {
+	public static final String LOCALHOST="127.0.0.1";
 	public static final String bad_ip_file="IP地址库文件错误";
 	public static final String unknown_country="未知国家";
 	public static final String unknown_area="未知地区";
@@ -118,7 +121,7 @@ public class IPSeeker {
         if(mbb == null) {
 		    FileChannel fc = ipFile.getChannel();
             mbb = fc.map(FileChannel.MapMode.READ_ONLY, 0, ipFile.length());
-            mbb.order(ByteOrder.LITTLE_ENDIAN);	            
+            mbb.order(ByteOrder.LITTLE_ENDIAN);
         }
         
 	    int endOffset = (int)ipEnd;
@@ -572,7 +575,9 @@ public class IPSeeker {
 		IPSeeker.ipCache.clear();
 		this.ipFile.close();
 	}
-	
+	public static IPSeeker getInstance() throws URISyntaxException, IOException{
+		return getInstance((IPSeeker)null);
+	}
 	public static IPSeeker getInstance(IPSeeker earlier) throws URISyntaxException, IOException{
 		return getInstance(earlier,Help.convert(CommonConstant.getPROPERTIES().getProperty(IPDAT_NAME),"ip.dat"));
 	}
@@ -590,24 +595,36 @@ public class IPSeeker {
 			earlier=new IPSeeker(ipSrc);
 		}else if(!earlier.ipSrc.equals(ipSrc) || earlier.isSrcChanged()){
 			earlier.close();
+			IPSeeker.ipCache.clear();
 			earlier=new IPSeeker(earlier.ipSrc);
 		}
 		return earlier;
 	}
-//	
-	public static void main(String[] args) throws IOException, URISyntaxException {
-		IPSeeker seeker=null;
-		seeker=getInstance(seeker);
-		System.out.println(seeker.getCountry("117.136.44.1"));
-//		BufferedReader br=new BufferedReader(new FileReader("d:/ip.TXT"));
-//		PrintWriter pw=new PrintWriter(new FileWriter("d:/loc.csv"));
-//		String l=null;
-//		while((l=br.readLine())!=null){
-//			if(Help.isNotEmptyAndNull(l)){
-//				pw.println(l+','+seeker.getArea(l)+','+seeker.getCountry(l));
-//			}
-//		}
-//		pw.close();
-//		br.close();
+	
+	/**
+	 * 得到发起请求的ip
+	 * @param request
+	 * @return
+	 */
+	public static String getIp(HttpServletRequest request){
+		String[] header=new String[]{"X-Forwarded-For","Proxy-Client-IP","WL-Proxy-Client-IP"};
+		String ip=null;
+		int i=0,l=header.length;
+		do{
+			ip=request.getHeader(header[i]);
+		}while(++i<l && (Help.isEmpty(ip) || "unknown".equalsIgnoreCase(ip) || LOCALHOST.equals(ip)));
+		if(Help.isEmpty(ip) || "unknown".equalsIgnoreCase(ip) || LOCALHOST.equals(ip)){
+			ip = request.getRemoteAddr();
+		}
+		return ip;
+	}
+	
+	/**
+	 * 判断参数表示的ip是不是本机ip 127.0.0.1或localhost
+	 * @param ip
+	 * @return
+	 */
+	public static boolean isLocalhost(String ip){
+		return "127.0.0.1".equals(ip) || "localhost".equalsIgnoreCase(ip);
 	}
 }

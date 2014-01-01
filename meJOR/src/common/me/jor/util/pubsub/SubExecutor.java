@@ -1,5 +1,6 @@
 package me.jor.util.pubsub;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Queue;
@@ -9,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import me.jor.common.GlobalObject;
-import edu.emory.mathcs.backport.java.util.Collections;
 
 public class SubExecutor implements Runnable{
 	private static ExecutorService executor=GlobalObject.getExecutorService();

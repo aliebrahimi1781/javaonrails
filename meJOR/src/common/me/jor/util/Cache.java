@@ -1,6 +1,7 @@
 package me.jor.util;
 
 import java.lang.ref.SoftReference;
+import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -141,6 +142,7 @@ public class Cache<K,E> {
 	public E put(K key, E value){
 		return put(new HashAndEqualsSoftReference(pretreatKey(key)), new HashAndEqualsSoftReference<E>(value));
 	}
+	
 	private E put(SoftReference<K> srk, SoftReference<E> srv){
 		try{
 			lock.writeLock().lock();
@@ -150,6 +152,33 @@ public class Cache<K,E> {
 			clearEmptyReference();
 			lock.writeLock().unlock();
 		}
+	}
+	/**
+	 * 每次加1
+	 * @param key
+	 * @return
+	 */
+	public Long inc(K key){
+		return change(key,1);
+	}
+	/**
+	 * 每次减1
+	 * @param key
+	 * @return
+	 */
+	public Long dec(K key){
+		return change(key,-1);
+	}
+	private Long change(K key, int v){
+		Long n=(Long)get(key);
+		long r=v;
+		if(n==null){
+			put(key,(E)Long.valueOf(r));
+		}else{
+			r=n.longValue()+r;
+			replace(key,(E)Long.valueOf(r));
+		}
+		return r;
 	}
 	/**
 	 * 向缓存添加新值

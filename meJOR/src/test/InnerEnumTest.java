@@ -10,7 +10,7 @@ public class InnerEnumTest {
 		TEST;
 		@Override
 		public void create() {
-			int ii=InnerEnumTest.this.i;
+//			int ii=InnerEnumTest.this.i;
 		}
 	}
 }

@@ -11,13 +11,13 @@
          <property name="mailSender">
             <bean class="org.springframework.mail.javamail.JavaMailSenderImpl" scope="prototype">
 		        <property name="host">
-		            <value>smtpcom.263xmail.com</value><!-- smtpcom.263xmail.com -->
+		            <value>smtp</value><!-- smtp -->
 		        </property>
 		        <property name="username">
-		            <value>jingrun.wu@wifiin.com</value>
+		            <value></value><!-- 发件人电邮账号 -->
 		        </property>
 		        <property name="password">
-		            <value>RUN2684</value><!-- lifaqiang9696 -->
+		            <value></value><!-- 电邮密码 -->
 		        </property>
 		        <property name="javaMailProperties">
 		            <props>
@@ -42,14 +42,14 @@
 		    </bean>
          </property>
          <property name="from">
-            <value>jingrun.wu@wifiin.com</value>
+            <value></value><!-- 发件人 -->
           </property>
           <property name="subject">
             <value>异常账号</value>
           </property>
           <property name="contentTemplate">
             <value>
-                <![CDATA[超时长的账号：<br/>#NO_TIME_LEFT#<br/>登录失败次数过多的账号：<br/>#AUTH_FAILED_TOO_MANY_TIMES#]]>
+                <![CDATA[。。。。]]><!-- 电邮内容 -->
             </value>
           </property>
     </bean>

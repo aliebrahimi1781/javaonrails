@@ -37,6 +37,7 @@
             <result-type name="none-result" class="me.jor.struts.result.NoneResult"></result-type>  
         </result-types> 
 		<interceptors>
+		    <interceptor name="httpsInterceptor" class="me.jor.struts.interceptor.HttpsInterceptor"/><!-- 只有https请求可以通过 -->
 			<interceptor name="timeResumeAndExceptionInterpector" class="me.jor.struts.interceptor.TimeConsumeAndExceptionInterceptor"/>
 			<interceptor name="postfixInterpector" class="me.jor.struts.interceptor.PostfixInterceptor"/>
 			<interceptor name="privilegeInterceptor" class="privilegeInterceptor"/>
@@ -92,6 +93,19 @@
 		<global-exception-mappings>
 			<exception-mapping result="error" exception="java.lang.Throwable"> </exception-mapping> 
 		</global-exception-mappings>
+	</package>
+	<!-- json request params -->
+	<package name="jsonParams-default" extends="dev-default">
+	   <interceptors>
+	       <interceptor name="timeConsumeAndExceptionForJsonRequestInterceptor" class="me.jor.struts.interceptor.TimeConsumeAndExceptionForJsonRequestInterceptor"/>
+	       <interceptor-stack name="jsonParamsInterceptorStack">
+	           <interceptor-ref name="defaultStack" />
+	           <interceptor-ref name="timeConsumeAndExceptionForJsonRequestInterceptor">
+                  <param name="defaultCharset">UTF-8</param>
+                </interceptor-ref>
+	       </interceptor-stack>
+	   </interceptors>
+	   <default-interceptor-ref name="jsonParamsInterceptorStack"></default-interceptor-ref>
 	</package>
 	<!-- global upload config -->
 	<package name="upload-default" extends="dev-default">

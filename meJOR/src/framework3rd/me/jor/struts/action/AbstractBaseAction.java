@@ -18,6 +18,7 @@ import me.jor.exception.ResponseWriteException;
 import me.jor.exception.ResponseWriteJsonException;
 import me.jor.exception.ResponseWriteJsonpException;
 import me.jor.util.Help;
+import me.jor.util.ip.IPSeeker;
 
 import org.apache.struts2.ServletActionContext;
 
@@ -104,7 +105,7 @@ public abstract class AbstractBaseAction extends ActionSupport {
 	 * @return
 	 */
 	public String getIp(){
-		return Help.getIp(getRequest());
+		return IPSeeker.getIp(getRequest());
 	}
 	/**
 	 * 获得请求后缀
@@ -158,6 +159,9 @@ public abstract class AbstractBaseAction extends ActionSupport {
 	public String getBrowserLanguage(){
 		return getLocale().getDisplayLanguage();
 	}
+	public boolean containsRequestHeader(String name){
+		return Help.isNotEmpty(getRequest().getHeader(name));
+	}
 	/**
 	 * 得到名字是name的请求头信息
 	 * @param name
@@ -166,6 +170,24 @@ public abstract class AbstractBaseAction extends ActionSupport {
 	public String getRequestHeader(String name){
 		return getRequest().getHeader(name);
 	}
+	/**
+	 * 得到请求头的值，并转化成整数
+	 */
+	public int getIntRequestHeader(String name, int defaultValue){
+		String header=getRequest().getHeader(name);
+		return Help.isNotEmpty(header)?Integer.parseInt(header):defaultValue;
+	}
+	/**
+	 * 得到请求头的值，并转化成long型
+	 * @param name
+	 * @param defaultValue
+	 * @return
+	 */
+	public long getLongRequestHeader(String name, long defaultValue){
+		String header=getRequest().getHeader(name);
+		return Help.isNotEmpty(header)?Long.parseLong(header):defaultValue;
+	}
+	
 	/**
 	 * 得到请求头的语言信息: Accept-Language
 	 * @return String

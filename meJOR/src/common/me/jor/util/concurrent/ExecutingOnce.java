@@ -10,6 +10,8 @@ import me.jor.common.Task;
 import me.jor.util.LockCache;
 
 /**
+ * 实践证明高并发情况下可能会导致程序不再响应，可能是由于尚未发现的死锁引起。目前还没有能力解决
+ * 
  * 所有注册在此类的对象中的线程执行且只执行一次指定的Task实现。
  * 只要key相同，就被认为执行的任务相同，所以虽然不是必须，但是最好确保key与task严格一一对应。
  * 所有持有相同key的线程将会竞争执行任务的机会，
@@ -31,6 +33,7 @@ import me.jor.util.LockCache;
  * 
  * 只需要调用静态的executeAndWait(String key, Task task)或executeAndReturnImmediately(String key, Task task)。
  * */
+@Deprecated
 public class ExecutingOnce implements Task{
 	private static final Map<String, Task> map=new ConcurrentHashMap<String, Task>();
 	private CountDownLatch finished=new CountDownLatch(1);
@@ -129,10 +132,13 @@ public class ExecutingOnce implements Task{
 				result=task.execute();
 				map.remove(key);
 				finished.countDown();
-			}else if(!returnImmediately.get()){
-				await();
 			}else{
-				return (T)this;//只在内部使用
+				Boolean immediately=returnImmediately.get();
+				if(immediately==null || !immediately){
+					await();
+				}else{
+					return (T)this;//只在内部使用
+				}
 			}
 		}
 		return (T)result;

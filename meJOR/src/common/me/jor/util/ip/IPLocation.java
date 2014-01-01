@@ -66,7 +66,7 @@ public class IPLocation {
 						i=0;
 						l=municipalities.length;
 						for(;i<l;i++){
-							String city=this.municipalities[i];
+							String city=municipalities[i];
 							if(country.startsWith(city)){
 								this.province=this.city=city+'市';
 								break;

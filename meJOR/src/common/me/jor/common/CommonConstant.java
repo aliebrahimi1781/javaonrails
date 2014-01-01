@@ -1,17 +1,30 @@
 package me.jor.common;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import me.jor.exception.ConstantLoadingException;
 import me.jor.util.Help;
+import me.jor.util.Log4jUtil;
+
+import org.apache.commons.logging.Log;
 
 /**
  * 在工程类路径的根下查找文件名以constant.properties结尾的文件<br/>
  * 加载其中的properties名值对作为常量定义保存在名为PROPERTIES的私有静态属性内<br/>
  * 可通过getProperties()方法获取<br/>
+ * 
+ * properties.dev.reload.period 定义重新载入常量定义文件的周期，默认是60000ms，最好跟properties.dev.reload.period.timeunit搭配使用，否则可能导致周期过短或过长
+ * properties.dev.reload.period.timeunit 定义重新载入周期的时间单位，默认是TimeUnit.MILLISECONDS
+ * properties.dev.reloadable 如果这个键的值是"1"，就会重新定时重新加载常量定义文件，如果没有定义或者是其它值就不会
  * */
 public final class CommonConstant {
+	private static final Log log=Log4jUtil.getLog(CommonConstant.class);
 	/**
 	 * 常量属性文件后缀，所有在资源目录中以此结束的文件名都作为常量文件名加载。
 	 * 常量key相同的以最后一次出现的为准
@@ -20,7 +33,7 @@ public final class CommonConstant {
 	/**
 	 * 以此为名在cookie中保存登录用户id
 	 */
-	public static final String USER_ID_HEADER="USER-ID-HEADER";
+	public static final String USER_ID_HEADER="User-Id";
 	/**
 	 * 以此为名在cookie中保存登录用户名
 	 */
@@ -39,7 +52,7 @@ public final class CommonConstant {
 	public static final String DEFAULT_CHARSET="UTF-8";
 	public static final String PASSWORD = "password";
 
-	private static final Properties PROPERTIES;
+	private static Properties PROPERTIES;
 	
 	public static Properties getPROPERTIES(){
 		return PROPERTIES!=null?PROPERTIES:System.getProperties();
@@ -47,6 +60,7 @@ public final class CommonConstant {
 	
 	/**
 	 * 返回值作为向浏览器推送的javascript函数名
+	 * properties键名：properties.dev.project.iframefn
 	 * @return String
 	 */
 	public static String getIFRAMEFN(){
@@ -55,18 +69,21 @@ public final class CommonConstant {
 
 	/**
 	 * 决定log4j配置是否可在运行期重加载
+	 * properties键名：properties.dev.project.log4j.reloadable
 	 */
 	public static String getLOG4J_CONF_RELOADABLE(){
 		return CommonConstant.getPROPERTIES().getProperty("properties.dev.project.log4j.reloadable");
 	}
 	/**
 	 * 决定log4j日志的文件路径
+	 * properties键名：properties.dev.project.log4j.path
 	 */
 	public static String getLOG4J_PATH(){
 		return CommonConstant.getPROPERTIES().getProperty("properties.dev.project.log4j.path");
 	}
 	/**
 	 * 决定重加载log4j配置的周期
+	 * properties键名：properties.dev.project.log4j.reload.period
 	 * @return String
 	 */
 	public static String getLOG4J_RELOAD_PERIOD(){
@@ -74,6 +91,7 @@ public final class CommonConstant {
 	}
 	/**
 	 * 确定svn协议
+	 * properties键名：properties.dev.project.svn.protocol
 	 * @return String
 	 */
 	public static String getSVN_PROTOCOL(){
@@ -81,6 +99,7 @@ public final class CommonConstant {
 	}
 	/**
 	 * 确定svn用户名
+	 * properties键名：properties.dev.project.svn.auth.user
 	 * @return String
 	 */
 	public static String getSVN_AUTH_USER(){
@@ -88,6 +107,7 @@ public final class CommonConstant {
 	}
 	/**
 	 * 确定svn密码
+	 * properties键名：properties.dev.project.svn.auth.pass
 	 * @return String
 	 */
 	public static String getSVN_AUTH_PASS(){
@@ -95,6 +115,7 @@ public final class CommonConstant {
 	}
 	/**
 	 * 如果应用需要一个统一的线程池完成系统级任务可指定此线程池
+	 * properties键名：properties.dev.project.threadpool.size
 	 * @return int 系统线程池大小
 	 * @see
 	 */
@@ -143,30 +164,66 @@ public final class CommonConstant {
 			return (E)Enum.valueOf(enumType, val);
 		}
 	}
-	static{
+	public static void loadConstant(Class constantClass) throws IllegalArgumentException, IllegalAccessException{
+		clearBufferedValue(constantClass);
+		loadConstant();
+	}
+	public static void clearBufferedValue(Class constantClass) throws IllegalArgumentException, IllegalAccessException{
+		Field[] fs=constantClass.getDeclaredFields();
+		for(int i=0,l=fs.length;i<l;i++){
+			Field f=fs[i];
+			Class ft=f.getType();
+			if((f.getModifiers()&Modifier.FINAL)>0){
+				continue;
+			}
+			if(ft.isPrimitive()){
+				if(ft.equals(Boolean.TYPE)){
+					f.setBoolean(null, false);
+				}else if(ft.equals(Byte.TYPE)){
+					f.set(null,(byte)0);
+				}else if(ft.equals(Short.TYPE)){
+					f.set(null,(short)0);
+				}else{
+					f.set(null, 0);
+				}
+			}else{
+				f.set(null,null);
+			}
+		}
+	}
+	public static void loadConstant(){
+		Properties properties=new Properties();
 		try {
-			PROPERTIES=new Properties();
 			for(File props:new File(CommonConstant.class.getResource("/").toURI()).listFiles()){
 				if(props.isFile() && props.getName().endsWith(CONSTANT_PROPERTIES)){
-					PROPERTIES.putAll(Help.loadProperties(props, DEFAULT_CHARSET));
+					properties.putAll(Help.loadProperties(props, DEFAULT_CHARSET));
 				}
 			}
+			PROPERTIES=properties;
 		}catch(Exception e) {
 			throw new ConstantLoadingException(e);
 		}
+		String periodDef=PROPERTIES.getProperty("properties.dev.reload.period");
+		String timeUnit=PROPERTIES.getProperty("properties.dev.reload.period.timeunit");
+		long delay=Help.isEmpty(periodDef)?60000:Long.parseLong(periodDef);
+		if("1".equals(PROPERTIES.getProperty("properties.dev.reloadable"))){
+			final ScheduledExecutorService ses=Executors.newScheduledThreadPool(1);
+			ses.scheduleWithFixedDelay(new Runnable(){
+				public void run(){
+					try{
+						loadConstant();
+						ses.shutdown();
+					}catch(ConstantLoadingException e){
+						log.error("",e);
+					}
+				}
+			},delay,delay,Help.isEmpty(timeUnit)?TimeUnit.MILLISECONDS:TimeUnit.valueOf(timeUnit));
+		}
 	}
-	
-//	public static void main(String[] args) {
-//		Properties p=System.getProperties();
-//		System.out.println(Runtime.getRuntime().availableProcessors());
-//		Map m=System.getenv();
-//		for(Object e:m.entrySet()){
-//			Map.Entry me=(Map.Entry)e;
-//			System.out.println(me.getKey()+"  "+me.getValue());
-//		}
-//		for(Map.Entry e:p.entrySet()){
-//			System.out.println(e.getKey()+"  "+e.getValue());
-//		}
-//		System.out.println(getTHREAD_POOL_SIZE());
-//	}
+	public static void setPROPERTIES(Properties props){
+		PROPERTIES=props;
+	}
+	static{
+		loadConstant();
+	}
 }

@@ -89,7 +89,6 @@ public interface InterfaceHibernateDao {
 
 	public abstract <T> List<T> find(final String hql,
 			final Map<String, Object> params);
-
 	public abstract <T> List<T> findByParameters(final String hql,
 			final Object params);
 
@@ -217,4 +216,6 @@ public interface InterfaceHibernateDao {
 	public abstract int bulkUpdate(final String hql, final Object... values);
 
 	public abstract void flush();
+
+	public abstract <T> List<T> find(String hql, Object... param);
 }

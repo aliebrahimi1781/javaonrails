@@ -57,7 +57,10 @@ class EnDecryptionUtil extends MessageDigestUtil{
     	return digest(src,src);
     }
     protected static byte[] digest(byte[] md5, byte[] sha){
-    	return Help.merge(md5(md5),sha(sha));
+    	byte[] dst=new byte[md5.length+sha.length];
+    	System.arraycopy(md5, 0, dst, 0, md5.length);
+    	System.arraycopy(sha, 0, dst, md5.length, sha.length);
+    	return Help.merge(md5,sha);
     }
     protected static boolean isBase64Key(String key){
     	return RegexUtil.isBase64(key)&& key.length()%4==0;

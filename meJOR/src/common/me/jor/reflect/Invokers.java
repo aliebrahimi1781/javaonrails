@@ -9,6 +9,7 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
+import javassist.NotFoundException;
 import me.jor.common.Task;
 import me.jor.util.Cache;
 import me.jor.util.concurrent.ExecutingOnce;
@@ -18,7 +19,7 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 /**
  * 快速动态方法调用器
  * 
- * 
+ * thank http://www.iteye.com/topic/1129340
  */
 public class Invokers {
 	/**
@@ -29,7 +30,23 @@ public class Invokers {
 	 * 公共调用器池
 	 */
 	private static final Cache<Method, Invoker> PUBLIC_INVOKER_CACHE = Cache.getCache(Invokers.class.getName()+".PUBLIC_INVOKER_CACHE");
-
+	
+	private static ClassPool classPool;
+	
+	private static ClassPool getClassPool(){
+		if(classPool==null){
+			synchronized(ClassPool.class){
+				if(classPool==null){
+					classPool=ClassPool.getDefault();
+					classPool.appendSystemPath();
+				}
+			}
+		}
+		return classPool;
+	}
+	public static void addClassPath(String path) throws NotFoundException{
+		getClassPool().insertClassPath(path);
+	}
 	/**
 	 * 调用器接口
 	 */
@@ -126,20 +143,19 @@ public class Invokers {
 					@Override
 					public <T> T execute() throws Throwable {
 						Invoker invoker=null;
-						String proxyClassName = "proxy.invoker.method$"+method.hashCode();
+						String proxyClassName = "proxy.invoker.method$"+System.identityHashCode(method);
 						Class<?> proxyClass;
 						try {
 							proxyClass = Class.forName(proxyClassName);
 						} catch (Throwable e) {
-							ClassPool cp = new ClassPool(true);
+							ClassPool cp = getClassPool();
 							CtClass cc = cp.makeClass(proxyClassName);
 							cc.addField(CtField.make(
 									"private java.lang.reflect.Method m;", cc));
 							CtConstructor ctConstructor = new CtConstructor(
 									new CtClass[] { cp.get(Method.class.getName()) },
 									cc);
-							ctConstructor
-									.setBody("{this.m=(java.lang.reflect.Method)$1;}");
+							ctConstructor.setBody("{this.m=(java.lang.reflect.Method)$1;}");
 							cc.addConstructor(ctConstructor);
 							cc.addInterface(cp.get(Invoker.class.getName()));
 							cc.addMethod(CtMethod.make("public java.lang.reflect.Method method(){return m;}",cc));
@@ -160,8 +176,7 @@ public class Invokers {
 								executeCode.append(")throw new IllegalArgumentException(\"wrong number of arguments\");");
 							}
 							executeCode.append("((");
-							executeCode.append(method.getDeclaringClass()
-									.getCanonicalName());
+							executeCode.append(method.getDeclaringClass().getName());
 							executeCode.append(")");
 							executeCode.append(Modifier.isStatic(method.getModifiers()) ? "" : "host");
 							executeCode.append(").");
@@ -176,10 +191,11 @@ public class Invokers {
 										method.getReturnType(), Object.class));
 								invokeCode.append(";");
 							} else {
-								invokeCode.append(executeCode.toString());
+								invokeCode.append(executeCode);
 								invokeCode.append(";return null;");
 							}
 							invokeCode.append("}");
+							System.out.println(invokeCode);
 							cc.addMethod(CtMethod.make(invokeCode.toString(), cc));
 							proxyClass = cc.toClass();
 						}
@@ -293,14 +309,10 @@ public class Invokers {
 							}
 
 							if (hostMethodParameterTypes != null) {
-								String param = generateCast("p" + i,
-										parameterTypes[i],
-										hostMethodParameterTypes[i - 1]);
+								String param = generateCast("p" + i,parameterTypes[i],hostMethodParameterTypes[i - 1]);
 								paramCode.append(param);
 							} else {
-								String param = generateCast("p" + i,
-										parameterTypes[i],
-										parameterTypes[i - 1]);
+								String param = generateCast("p" + i,parameterTypes[i],parameterTypes[i - 1]);
 								paramCode.append(param);
 							}
 						}
@@ -332,8 +344,8 @@ public class Invokers {
 					} else {
 						methodCode.append(executeCode);
 					}
-					methodCode.append(";");
-					methodCode.append("}");
+					methodCode.append(";}");
+					System.out.println(methodCode);
 					cc.addMethod(CtMethod.make(methodCode.toString(), cc));
 				}
 				proxyClass = cc.toClass();
@@ -517,4 +529,3 @@ public class Invokers {
 		return newInvoker(superClass, hostClass, null);
 	}
 }
-

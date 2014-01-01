@@ -2,8 +2,12 @@ package me.jor.util;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import me.jor.common.CommonConstant;
 
@@ -14,6 +18,7 @@ public class MessageDigestUtil{
 	public static final String MESSAGE_DIGEST_MD5="md5";
 	public static final String MESSAGE_DIGEST_SHA="sha";
 	public static final String MESSAGE_DIGEST_SHA1="sha-1";
+	public static final String MESSAGE_DIGEST_HMAC_SHA1="hmac-sha1";
 	private static final char[] HEXBUF=new char[]{'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
 	public static String messageDigest(long src, String algorithm, int outputType){
@@ -81,15 +86,17 @@ public class MessageDigestUtil{
 		return messageDigest(src,MESSAGE_DIGEST_SHA);
 	}
 	public static String messageDigest(byte[] src, String algorithm, int outputType){
-		byte[] digest=messageDigest(src,algorithm);
+		return output(messageDigest(src,algorithm),outputType);
+	}
+	private static String output(byte[] src, int outputType){
 		switch(outputType){
 		case MESSAGE_DIGEST_OUTPUT_TYPE_BASE64:
-			return new sun.misc.BASE64Encoder().encode(digest);
+			return Base64.encode(src);
 		case MESSAGE_DIGEST_OUTPUT_TYPE_HEX:
 			StringBuilder result=new StringBuilder();
 			int bitmask=0xf;
-			for(int i=0,l=digest.length;i<l;i++){
-				byte b=digest[i];
+			for(int i=0,l=src.length;i<l;i++){
+				byte b=src[i];
 				//0x00&bitmask==>>"0" 0x0a&bitmask==>>"a"
 				//but we want 0x00&bitmask==>>"00"
 				//(b>>4)&bitmask is necessary, or b>>>4 will be a very large number if b is less than 0
@@ -100,18 +107,35 @@ public class MessageDigestUtil{
 			throw new IllegalArgumentException("illegal outputType value:"+outputType);
 		}
 	}
+	public static byte[] hmac(byte[] src, String algorithm) throws InvalidKeyException, NoSuchAlgorithmException{
+		SecretKeySpec signingKey = new SecretKeySpec(src, algorithm);  
+        Mac mac = Mac.getInstance(algorithm);  
+        mac.init(signingKey);  
+        return mac.doFinal(src);
+	}
+	public static String hmac(String src, String algorithm,int outputType, String charset) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException{
+		return output(hmac(src.getBytes(charset),algorithm),outputType);
+	}
 	
-	public static void main(String[] args) throws IOException {
-		String[] pwds=new String[]
-		         {"666666","888888","123456","root","root1357","root123","root1234","rootroot",
-				  "admin","adminroot","rootadmin","adminadmin","admin123","admin1234","admin1357"};
-		for(String pwd:pwds){
-			System.out.println(pwd+"\t"+messageDigest(pwd,"utf8","md5",MESSAGE_DIGEST_OUTPUT_TYPE_BASE64)+" "+messageDigest(pwd,"utf8","md5",MESSAGE_DIGEST_OUTPUT_TYPE_HEX));
-		}
-		long s=System.nanoTime();
-		for(int i=0;i<1000000;i++){
-			messageDigest("","utf8","md5",MESSAGE_DIGEST_OUTPUT_TYPE_BASE64);
-		}
-		System.out.println((System.nanoTime()-s)/1000000);
+	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+		System.out.println(shaHex("1332004436").toUpperCase());
+		SecretKeySpec signingKey = new SecretKeySpec("a".getBytes("UTF-8"), "hmac-sha1");  
+        Mac mac = Mac.getInstance("HmacSHA1");  
+        mac.init(signingKey);  
+        byte[] rawHmac = mac.doFinal("1332004436".getBytes("UTF-8"));
+        System.out.println(Base64.encode(rawHmac));
+//		String[] pwds=new String[]
+//		         {"666666","888888","123456","root","root1357","root123","root1234","rootroot",
+//				  "admin","adminroot","rootadmin","adminadmin","admin123","admin1234","admin1357"};
+//		for(String pwd:pwds){
+//			System.out.println(pwd+"\t"+messageDigest(pwd,"utf8","md5",MESSAGE_DIGEST_OUTPUT_TYPE_BASE64)+" "+messageDigest(pwd,"utf8","md5",MESSAGE_DIGEST_OUTPUT_TYPE_HEX));
+//		}
+//		long s=System.nanoTime();
+//		for(int i=0;i<1000000;i++){
+//			messageDigest("","utf8","md5",MESSAGE_DIGEST_OUTPUT_TYPE_BASE64);
+//		}
+//		System.out.println((System.nanoTime()-s)/1000000);
+//		System.out.println(org.apache.commons.codec.digest.DigestUtils.shaHex("abcde"));
+//		System.out.println(MessageDigestUtil.shaHex("abcde"));
 	}
 }

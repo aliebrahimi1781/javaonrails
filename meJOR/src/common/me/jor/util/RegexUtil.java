@@ -4,11 +4,14 @@ import java.util.regex.Pattern;
 
 public class RegexUtil {
 	/**类c语法的注释正则表达式*/
-	private static volatile Pattern COMMENT;
-	private static volatile Pattern DIGIT;
-	private static volatile Pattern BASE64;
-	private static volatile Pattern blankCharRegex;
-	private static volatile Pattern IP4;
+	private static Pattern COMMENT;
+	private static Pattern DIGIT;
+	private static Pattern INTEGER;
+	private static Pattern BASE64;
+	private static Pattern blankCharRegex;
+	private static Pattern IP4;
+	private static Pattern MAC_REGEX;
+	private static Cache<String,Pattern> patternCache;
 	
 	private static Pattern getBase64(){
 		if(BASE64==null){
@@ -69,6 +72,16 @@ public class RegexUtil {
 		}
 		return DIGIT;
 	}
+	private static Pattern getIntegerRegex(){
+		if(INTEGER==null){
+			synchronized(RegexUtil.class){
+				if(INTEGER==null){
+					INTEGER=Pattern.compile("^\\d+$");
+				}
+			}
+		}
+		return INTEGER;
+	}
 	/**
 	 * 判断src是否数字串
 	 * @param src
@@ -77,16 +90,23 @@ public class RegexUtil {
 	public static boolean isDigit(String src){
 		return getDigitRegex().matcher(src).matches();
 	}
-	
+	/**
+	 * 判断src是否整数串
+	 * @param src
+	 * @return
+	 */
+	public static boolean isInteger(String src){
+		return getIntegerRegex().matcher(src).matches();
+	}
 	public static boolean isBase64(String src){
-		return getBase64().matcher(src).matches();
+		return src.length()%4==0 && getBase64().matcher(src).matches();
 	}
 	
 	private static Pattern getIp4Regex(){
 		if(IP4==null){
 			synchronized(Pattern.class){
 				if(IP4==null){
-					IP4=Pattern.compile("^(((00)?\\d|[01]?\\d\\d|2[0-4]\\d|25[0-5])\\.){3}((00)?\\d|[01]?\\d\\d|2[0-4]\\d|25[0-5])$");
+					IP4=Pattern.compile("^(((00)?\\d|0?1?\\d\\d|2[0-4]\\d|25[0-5])\\.){3}((00)?\\d|0?1?\\d\\d|2[0-4]\\d|25[0-5])$");
 				}
 			}
 		}
@@ -94,5 +114,70 @@ public class RegexUtil {
 	}
 	public static boolean isIp4(String src){
 		return getIp4Regex().matcher(src).matches();
+	}
+	
+	private static Pattern getMacRegex(){
+		if(MAC_REGEX==null){
+			synchronized(RegexUtil.class){
+				if(MAC_REGEX==null){
+					MAC_REGEX=Pattern.compile("^(([0-9a-z]{2}:)|([0-9a-z]{2}-)){5}[0-9a-z]{2}$");
+				}
+			}
+		}
+		return MAC_REGEX;
+	}
+	
+	public static boolean isMac(String mac){
+		return getMacRegex().matcher(mac.toLowerCase()).matches();
+	}
+	private static void getCache(){
+		if(patternCache==null){
+			synchronized(RegexUtil.class){
+				if(patternCache==null){
+					patternCache=Cache.getCache(RegexUtil.class.getName());
+				}
+			}
+		}
+	}
+	public static Pattern getRegex(String regex){
+		getCache();
+		Pattern pattern=patternCache.get(regex);
+		if(Help.isEmpty(pattern)){
+			pattern=patternCache.putIfAbsent(regex,Pattern.compile(regex));
+		}
+		return pattern;
+	}
+	public static Pattern getRegex(String regex, int flags){
+		return getRegex('/'+regex+'/'+flags);
+	}
+	
+	public static String[] split(CharSequence src, String regex){
+		return getRegex(regex).split(src);
+	}
+	public static boolean matches(CharSequence src, String regex){
+		return getRegex(regex).matcher(src).matches();
+	}
+	public static boolean isHex(CharSequence src, int len){
+		return getRegex("^[a-z0-9]{"+len+"}$").matcher(src).matches();
+	}
+	/**
+	 * 
+	 * @param src
+	 * @param min  最小长度
+	 * @param max  最大长度，如果小于0，认为没有最大长度限制
+	 * @return
+	 */
+	public static boolean isHex(CharSequence src, int min, int max){
+		return getRegex("^[a-z0-9]{"+min+','+(max>=0?max:"")+"}$").matcher(src.toString().toLowerCase()).matches();
+	}
+	public static String replaceFirst(CharSequence src, String regex,String replacement){
+		return getRegex(regex).matcher(src).replaceFirst(replacement);
+	}
+	public static String replaceAll(CharSequence src, String regex, String replacement){
+		return getRegex(regex).matcher(src).replaceAll(replacement);
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(isMac("4c:aa:16:bd:d9:0d"));
 	}
 }

@@ -5,6 +5,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.jor.util.Help;
+
 import org.jongo.Jongo;
 import org.jongo.Mapper;
 import org.jongo.marshall.jackson.JacksonMapper;
@@ -23,6 +25,7 @@ public class JongoFactoryBean implements FactoryBean<Jongo>,Closeable{
 	private String password;
 	private MapperFeature mapperFeature;
 	
+	public JongoFactoryBean(){}
 	public JongoFactoryBean(String address, String database, String username, String password){
 		this.address=address;
 		this.database=database;
@@ -76,7 +79,7 @@ public class JongoFactoryBean implements FactoryBean<Jongo>,Closeable{
 		return this.mongo=new Mongo(createServerAddressList());
 	}
 	private DB getDB() throws NumberFormatException, UnknownHostException{
-		DB db=createMongo().getDB(database);
+		DB db=createMongo().getDB(Help.isEmpty(database)?"admin":database);
 		char[] passwordChars=new char[password.length()];
 		password.getChars(0, password.length(), passwordChars, 0);
 		db.authenticate(username, passwordChars);

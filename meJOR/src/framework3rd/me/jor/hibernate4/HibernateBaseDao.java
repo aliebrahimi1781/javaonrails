@@ -17,11 +17,15 @@ import me.jor.hibernate.InterfaceHibernateDao;
 import me.jor.hibernate.Page;
 import me.jor.hibernate.UpdateFieldTag;
 import me.jor.util.Help;
+import me.jor.util.Log4jUtil;
 
+import org.apache.commons.logging.Log;
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.dao.DataAccessException;
+import org.springframework.orm.hibernate4.SessionFactoryUtils;
 
 /**
  * 基于hibernate实现的数据访问对象的公共超类。
@@ -30,6 +34,7 @@ import org.springframework.dao.DataAccessException;
  */
 @SuppressWarnings("unchecked")
 public class HibernateBaseDao implements InterfaceHibernateDao {
+	private static final Log log =Log4jUtil.getLog(HibernateBaseDao.class);
 	private SessionFactory sessionFactory;
 	
 	public SessionFactory getSessionFactory() {
@@ -45,7 +50,20 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	public Session currentSession(){
 		try{
 			Session session=sessionFactory.getCurrentSession();
-			return session!=null?session:openSession();
+			if(session!=null){
+				if(session.isConnected()){
+					return session;
+				}else{
+					try{
+						SessionFactoryUtils.closeSession(session);
+					}catch(HibernateException e){
+						log.debug("could not close an disconnected session",e);
+					}catch(Throwable e){
+						log.debug("Unexpected exception on closing Hibernate Session", e);
+					}
+				}
+			}
+			return sessionFactory.openSession();
 		}catch(Exception e){
 			return openSession();
 		}
@@ -69,9 +87,6 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 				pageSize=count;
 			}
 			int totalPage = count % pageSize == 0 ? count / pageSize : count / pageSize + 1;
-			if(page>totalPage){
-				page=totalPage;
-			}
 			return new Page<T>(findQuery.setFirstResult((page - 1) * pageSize)
 				.setMaxResults(pageSize).list(), page, count, totalPage);
 		}else{
@@ -368,6 +383,14 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	@Override
 	public <T> List<T> find(final String hql, final Map<String, Object> params) {
 		return currentSession().createQuery(hql).setProperties(params).list();
+	}
+	@Override
+	public <T> List<T> find(final String hql, final Object... param){
+		Query query=currentSession().createQuery(hql);
+		for(int i=0,l=param.length;i<l;i++){
+			query.setParameter(i, param[i]);
+		}
+		return query.list();
 	}
 
 	/**
@@ -730,7 +753,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 			Map<String,Method> mm=new HashMap<String,Method>();
 			Map<String,Object> nvm=new HashMap<String,Object>();
 			boolean updated = false;
-			Object persist=session.get(cls,id);
+			Object persist=session.createQuery("from "+cls.getName()+" where "+idname+"=?").setSerializable(0, id).uniqueResult();
 			for(int i=0,l=ms.length;i<l;i++){
 				Method m = ms[i];
 				String mn = m.getName();
@@ -758,7 +781,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 			if(updated){
 				int hqllen=hql.length();
 				hql.delete(hqllen-1,hqllen).append(" where ").append(idname).append("=:").append(idname);
-				this.bulkUpdate(hql.toString(), entity);
+				this.currentSession().createQuery(hql.toString()).setProperties(entity).executeUpdate();
 			}
 			return (T)persist;
 		} catch (Exception e) {

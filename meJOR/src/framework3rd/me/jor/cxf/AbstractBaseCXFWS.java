@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
 
-import me.jor.util.Help;
+import me.jor.util.ip.IPSeeker;
 
 import org.apache.cxf.transport.http.AbstractHTTPDestination;
 
@@ -44,7 +44,7 @@ public abstract class AbstractBaseCXFWS {
 	 * @return
 	 */
 	public String getIp(){
-		return Help.getIp(getRequest());
+		return IPSeeker.getIp(getRequest());
 	}
 	public String getRealPath(String path){
 		return getHttpContext().getRealPath(path);

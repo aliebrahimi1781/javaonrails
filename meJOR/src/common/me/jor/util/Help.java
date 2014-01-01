@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -17,6 +18,7 @@ import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -26,16 +28,15 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 
-import javax.servlet.http.HttpServletRequest;
-
 import me.jor.common.Task;
-import edu.emory.mathcs.backport.java.util.Arrays;
+import me.jor.exception.ObjectPopulationException;
 
 /**
  * <div>类简介</div>
@@ -123,6 +124,12 @@ public class Help {
 	 * @return String 转化后的日期字符串
 	 */
 	public static String currentTimeToTxt(SimpleDateFormat format){
+		return dateToTxt(System.currentTimeMillis(),format);
+	}
+	/**
+	 * 把当前时间转化成指定格式的字符串
+	 */
+	public static String nowToTxt(String format){
 		return dateToTxt(System.currentTimeMillis(),format);
 	}
 	/**
@@ -235,6 +242,40 @@ public class Help {
 		c.set(Calendar.MILLISECOND, 0);
 		return c.getTime();
 	}
+	public static Date tomorrow(){
+		Calendar c=Calendar.getInstance();
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE,0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+		c.add(Calendar.DATE, 1);
+		return c.getTime();
+	}
+	/**
+	 * 为date在指定的时间域增加amount，amount支持负数，借助Calendar.add(field,amount)实现
+	 * @param date
+	 * @param value
+	 * @param timeField 参考Calendar类的时间常量
+	 */
+	public static Date addTimeField(Date date, int amount, int timeField){
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.add(timeField, amount);
+		return calendar.getTime();
+	}
+	/**
+	 * 为date把指定时间域设置成value，借助Calendar.set(field,value)实现
+	 * @param date
+	 * @param value
+	 * @param timeField
+	 * @return
+	 */
+	public static Date setTimeField(Date date, int value, int timeField){
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(timeField, value);
+		return calendar.getTime();
+	}
 	/**
 	 * 判断字符串是否为空
 	 * @param src 需判断的字符串
@@ -294,6 +335,20 @@ public class Help {
 		return !isEmpty(array);
 	}
 	/**
+	 * 判断字符串是否为null、空字符串或只包含空白符
+	 */
+	public static boolean isNotEmptyAndBlank(String src){
+		return !isEmptyOrBlank(src);
+	}
+	/**
+	 * 判断字符串是否为null nill 空串或只包含空白符，不分大小写
+	 * @param src
+	 * @return
+	 */
+	public static boolean isNotEmptyAndBlankNull(String src){
+		return !isEmptyOrBlankNull(src);
+	}
+	/**
 	 * 字符串类型为空的判断
 	 * @param src 需判断的字符串
 	 * @return boolean
@@ -312,6 +367,20 @@ public class Help {
 		return isEmpty(src) || "null".equalsIgnoreCase(src) || "nil".equalsIgnoreCase(src);
 	}
 	/**
+	 * 判断字符串是否为null、空字符串或只包含空白符
+	 */
+	public static boolean isEmptyOrBlank(String src){
+		return src==null || src.trim().equals("");
+	}
+	/**
+	 * 判断字符串是否为null nill 空串或只包含空白符，不分大小写
+	 * @param src
+	 * @return
+	 */
+	public static boolean isEmptyOrBlankNull(String src){
+		return src==null || src.trim().equals("") || "null".equalsIgnoreCase(src) || "nil".equalsIgnoreCase(src);
+	}
+	/**
 	 * 对象为空的判断
 	 * @param src 需判断的对象
 	 * @return boolean
@@ -328,7 +397,7 @@ public class Help {
 		}else if(src instanceof Collection){
 			return isEmpty((Collection<?>)src);
 		}else if(src.getClass().isArray()){
-			return isEmpty((Object[])src);
+			return Array.getLength(src)==0;
 		}else{
 			return src==null;
 		}
@@ -423,25 +492,7 @@ public class Help {
 		}
 		return false;
 	}
-	/**
-	 * 如果src==null，返回dst中第一个不是null的参数，否则返回src
-	 * @param src 
-	 * @param dst
-	 * @return Object 第一个不是空的元素
-	 * @throws 
-	 * @exception
-	 */
-	public static Object convert(Object src, Object... dst){
-		int i=0,l=dst.length;
-		while(i<l && (src==null || 
-			  (src instanceof Number && ((Number)src).intValue()==0) || 
-			  "".equals(src) || 
-			  (src instanceof Collection && ((Collection)src).isEmpty()) || 
-			  (src instanceof Map && ((Map)src).isEmpty()))){
-			src=dst[i++];
-		}
-		return src;
-	}
+
 	/**
 	 * 如果src!=null && src.intValue()!=0，返回src，否则返回dst中第一个符合前述条件的参数
 	 * @param <T>
@@ -451,13 +502,16 @@ public class Help {
 	 * @throws 
 	 * @exception
 	 */
-	public static <T extends Number> T convert(T src, T... dst){
+	public static <T> T convert(T src, T... dst){
 		int i=0,l=dst.length;
 		while(i<l && (src==null || 
-			  src.intValue()==0 && (src instanceof Long || src instanceof Integer || src instanceof AtomicInteger || src instanceof AtomicLong || src instanceof BigInteger) ||
+			  "".equals(src) || 
+			 ((src instanceof Long || src instanceof Integer || src instanceof AtomicInteger || src instanceof AtomicLong || src instanceof BigInteger) && ((Number)src).intValue()==0) ||
 			 (src instanceof Double && ((Double)src).compareTo(0.0)==0) || 
 			 (src instanceof Float && ((Float)src).compareTo(0.0f)==0) ||
-			 (src instanceof BigDecimal && ((BigDecimal)src).compareTo(BigDecimal.ZERO)==0))){
+			 (src instanceof BigDecimal && ((BigDecimal)src).compareTo(BigDecimal.ZERO)==0) || 
+			 (src instanceof Collection && ((Collection)src).isEmpty()) || 
+			 (src instanceof Map && ((Map)src).isEmpty()))){
 			src=dst[i++];
 		}
 		return src;
@@ -941,6 +995,8 @@ public class Help {
 			return (E)value;
 		}else if(type.equals(Boolean.TYPE) || type.equals(Boolean.class) || type==Boolean.TYPE || type==Boolean.class){
 			return (E)new Boolean(value);
+		}else if(type.equals(UUID.class) || type==UUID.class){
+			return (E)UUID.fromString(value);
 		}else{
 			Class sc=null,pc=null,oc=Object.class;
 			do{
@@ -964,70 +1020,84 @@ public class Help {
 	 * @param fieldType 属性的类型
 	 * @param value 值
 	 * @return
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException E
-	 * @throws InstantiationException 
+	 * @throws Exception 
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(E e, Field field, Class fieldType, Object value) throws IllegalArgumentException, IllegalAccessException, InstantiationException{
-		field.setAccessible(true);
-		if(value instanceof String){
-			field.set(e,parse(fieldType,trim((String)value)));
-		}else if(Integer.TYPE==fieldType || Long.TYPE==fieldType || Float.TYPE==fieldType || Double.TYPE==fieldType || Short.TYPE==fieldType || 
-				 Boolean.TYPE==fieldType || Character.TYPE==fieldType || Byte.TYPE==fieldType ||
-				 value instanceof Integer || value instanceof Long || value instanceof Float || value instanceof Double || value instanceof Short ||
-				 value instanceof Boolean || value instanceof Character || value instanceof Byte){
-			field.set(e,value);
-		}else if(fieldType==BigInteger.class){
-			if(value instanceof byte[]){
-				field.set(e, new BigInteger((byte[])value));
-			}else if(value instanceof BigInteger){
-				field.set(e, value);
-			}else{
-				field.set(e, value.toString());
-			}
-		}else if(fieldType==BigDecimal.class){
-			if(value instanceof BigInteger){
-				field.set(e,new BigDecimal((BigInteger)value));
-			}else if(value instanceof Integer){
-				field.set(e,new BigDecimal(((Integer)value)).intValue());
-			}else if(value instanceof Long){
-				field.set(e,new BigDecimal(((Long)value)).longValue());
-			}else if(value instanceof Float){
-				field.set(e,new BigDecimal(((Float)value)).doubleValue());
-			}else if(value instanceof Double){
-				field.set(e,new BigDecimal(((Double)value)).doubleValue());
-			}else if(value instanceof BigDecimal){
-				field.set(e,(BigDecimal)value);
-			}else if(value instanceof char[]){
-				field.set(e,new BigDecimal((char[])value));
-			}else{
-				field.set(e,value.toString());
-			}
-		}else if(fieldType==AtomicBoolean.class){
-			field.set(e,new AtomicBoolean(((Boolean)value)).get());
-		}else if(fieldType==AtomicLong.class){
-			field.set(e, new AtomicLong(((Number)value).longValue()));
-		}else if(fieldType==AtomicInteger.class){
-			field.set(e, new AtomicInteger(((Number)value).intValue()));
-		}else if(value instanceof Map){
-			if(fieldType.getSimpleName().endsWith("Map")){
-				Map map=(Map)fieldType.newInstance();
-				Set<Map.Entry> me=((Map)value).entrySet();
-				for(Map.Entry entry:me){
-					map.put(entry.getKey(), entry.getValue());
+	public static <E> E populate(E e, Field field, Class fieldType, Object value){
+		try{
+			field.setAccessible(true);
+			if(value instanceof String){
+				field.set(e,parse(fieldType,trim((String)value)));
+			}else if(Integer.TYPE==fieldType || Long.TYPE==fieldType || Float.TYPE==fieldType || Double.TYPE==fieldType || Short.TYPE==fieldType || 
+					 Boolean.TYPE==fieldType || Character.TYPE==fieldType || Byte.TYPE==fieldType ||
+					 value instanceof Integer || value instanceof Long || value instanceof Float || value instanceof Double || value instanceof Short ||
+					 value instanceof Boolean || value instanceof Character || value instanceof Byte){
+				field.set(e,value);
+			}else if(fieldType==BigInteger.class){
+				if(value instanceof byte[]){
+					field.set(e, new BigInteger((byte[])value));
+				}else if(value instanceof BigInteger){
+					field.set(e, value);
+				}else{
+					field.set(e, value.toString());
 				}
+			}else if(fieldType==BigDecimal.class){
+				if(value instanceof BigInteger){
+					field.set(e,new BigDecimal((BigInteger)value));
+				}else if(value instanceof Integer){
+					field.set(e,new BigDecimal(((Integer)value)).intValue());
+				}else if(value instanceof Long){
+					field.set(e,new BigDecimal(((Long)value)).longValue());
+				}else if(value instanceof Float){
+					field.set(e,new BigDecimal(((Float)value)).doubleValue());
+				}else if(value instanceof Double){
+					field.set(e,new BigDecimal(((Double)value)).doubleValue());
+				}else if(value instanceof BigDecimal){
+					field.set(e,(BigDecimal)value);
+				}else if(value instanceof char[]){
+					field.set(e,new BigDecimal((char[])value));
+				}else{
+					field.set(e,value.toString());
+				}
+			}else if(fieldType==AtomicBoolean.class){
+				field.set(e,new AtomicBoolean(((Boolean)value)).get());
+			}else if(fieldType==AtomicLong.class){
+				field.set(e, new AtomicLong(((Number)value).longValue()));
+			}else if(fieldType==AtomicInteger.class){
+				field.set(e, new AtomicInteger(((Number)value).intValue()));
+			}else if(value instanceof Map){
+				String fieldTypeName=fieldType.getSimpleName();
+				if(fieldTypeName.endsWith("Map")){
+					Map map=(Map)fieldType.newInstance();
+					Set<Map.Entry> me=((Map)value).entrySet();
+					for(Map.Entry entry:me){
+						map.put(entry.getKey(), entry.getValue());
+					}
+				}else{
+					field.set(e,populate(fieldType.newInstance(),(Map)value,false));
+				}
+			}else if(value instanceof Collection){
+				Collection c=(Collection)value.getClass().newInstance();
+				for(Object o:(Collection)value){
+					Class oc=o.getClass();
+					Object dest=null;
+					if(o instanceof Collection || o instanceof Map){
+						c.add(o);
+					}else{
+						dest=oc.newInstance();
+						populate(dest, o, true);
+						c.add(dest);
+					}
+				}
+				field.set(e,c);
 			}else{
-				field.set(e,populate(fieldType.newInstance(),(Map)value,false));
+				field.set(e, value);
 			}
-		}else if(value instanceof Collection){
-			Collection c=(Collection)fieldType.newInstance();
-			for(Object o:(Collection)value){
-				c.add(o);
-			}
+			return e;
+		}catch(Exception ex){
+			throw new ObjectPopulationException(ex);
 		}
-		return e;
 	}
 	/**
 	 * 将value值赋给对象的field属性
@@ -1036,13 +1106,11 @@ public class Help {
 	 * @param field 属性
 	 * @param value 值
 	 * @return
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException E
-	 * @throws InstantiationException 
+	 * @throws Exception 
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(E e, Field field, Object value) throws IllegalArgumentException, IllegalAccessException, InstantiationException{
+	public static <E> E populate(E e, Field field, Object value){
 		return populate(e, field, field.getType(), value);
 	}
 	/**
@@ -1053,16 +1121,16 @@ public class Help {
 	 * @param name 属性名称
 	 * @param value 值
 	 * @return
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException E
-	 * @throws InstantiationException 
+	 * @throws Exception 
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(Class<E> ce, E e, String name, Object value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstantiationException{
-		return populate(e, ce.getDeclaredField(name),value);
+	public static <E> E populate(Class<E> ce, E e, String name, Object value){
+		try{
+			return populate(e, ce.getDeclaredField(name),value);
+		}catch(Exception ex){
+			throw new ObjectPopulationException(ex);
+		}
 	}
 	/**
 	 * 将value值赋给对象的field属性
@@ -1071,15 +1139,11 @@ public class Help {
 	 * @param name 属性名称
 	 * @param value 值
 	 * @return
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException E
-	 * @throws InstantiationException 
+	 * @throws Exception 
 	 * @throws 
 	 * @exception
 	 */
-	public static <E> E populate(E e, String name, Object value) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstantiationException{
+	public static <E> E populate(E e, String name, Object value){
 		return (E)populate((Class<E>)e.getClass(),e,name,value);
 	}
 	/**
@@ -1100,7 +1164,7 @@ public class Help {
 			Field f=fs[i];
 			String name=f.getName();
 			Object v=param.get(name);
-			if(isNotEmpty(v)||populateEmpty){
+			if(populateEmpty||isNotEmpty(v)){
 				try{
 					populate(e,f,f.getType(),v);
 				}catch(Exception ex){};
@@ -1108,21 +1172,23 @@ public class Help {
 		}
 		return e;
 	}
-	public static <E> E populate(E dst, Object ori, boolean populateEmpty) throws Exception{
+	public static <E> E populate(E dst, Object ori, boolean populateEmpty){
 		Class<E> c=(Class<E>)dst.getClass();
 		Class oc=ori.getClass();
 		Field[] fs=c.getDeclaredFields();
 		for(int i=0,l=fs.length;i<l;i++){
 			Field f=fs[i];
 			f.setAccessible(true);
-			Field of=oc.getDeclaredField(f.getName());
-			of.setAccessible(true);
-			Object v=of.get(ori);
-			if(isNotEmpty(v)||populateEmpty){
-				try{
-					populate(dst,f,f.getType(),v);
-				}catch(Exception ex){};
-			}
+			try{
+				Field of=oc.getDeclaredField(f.getName());
+				of.setAccessible(true);
+				Object v=of.get(ori);
+				if(isNotEmpty(v)||populateEmpty){
+					try{
+						populate(dst,f,f.getType(),v);
+					}catch(Exception ex){};
+				}
+			}catch(NoSuchFieldException | IllegalArgumentException | IllegalAccessException e){}
 		}
 		return dst;
 	}
@@ -1136,22 +1202,34 @@ public class Help {
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 */
-	public static <E> E populate(Class<E> c, Map<String,Object> src, boolean populateEmpty) throws InstantiationException, IllegalAccessException{
-		return populate(c.newInstance(),src,populateEmpty);
+	public static <E> E populate(Class<E> c, Map<String,Object> src, boolean populateEmpty){
+		try {
+			return populate(c.newInstance(),src,populateEmpty);
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ObjectPopulationException(e);
+		}
 	}
-	public static <E> E populate(E e, String fieldName, Object value, boolean populateEmpty) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstantiationException{
+	public static <E> E populate(E e, String fieldName, Object value, boolean populateEmpty){
 		if(isNotEmpty(value) || populateEmpty){
 			populate(e,fieldName,value);
 		}
 		return e;
 	}
-	public static <E> E populate(Class<E> c, Map<String, Object> src, String[] fields, boolean ignoreFields, boolean populateEmpty) throws InstantiationException, IllegalAccessException, SecurityException, NoSuchFieldException, IllegalArgumentException{
-		return populate(c.newInstance(),src,fields,ignoreFields,populateEmpty);
+	public static <E> E populate(Class<E> c, Map<String, Object> src, String[] fields, boolean ignoreFields, boolean populateEmpty){
+		try {
+			return populate(c.newInstance(),src,fields,ignoreFields,populateEmpty);
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ObjectPopulationException(e);
+		}
 	}
-	public static <E> E populate(Class<E> c, Object src, String[] fields, boolean ignoreFields, boolean populateEmpty) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstantiationException{
-		return populate(c.newInstance(),src,fields,ignoreFields,populateEmpty);
+	public static <E> E populate(Class<E> c, Object src, String[] fields, boolean ignoreFields, boolean populateEmpty){
+		try {
+			return populate(c.newInstance(),src,fields,ignoreFields,populateEmpty);
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ObjectPopulationException(e);
+		}
 	}
-	public static <E> E populate(E e, Map<String, Object> src, String[] fields, boolean ignoreFields, boolean populateEmpty) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstantiationException{
+	public static <E> E populate(E e, Map<String, Object> src, String[] fields, boolean ignoreFields, boolean populateEmpty){
 		if(ignoreFields){
 			Set<String> fset=new HashSet<String>(Arrays.asList(fields));
 			for(Map.Entry<String, Object> entry:src.entrySet()){
@@ -1168,28 +1246,32 @@ public class Help {
 		}
 		return e;
 	}
-	public static <E> E populate(E e, Object src, String[] fields, boolean ignoreFields, boolean populateEmpty) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException, InstantiationException{
-		Class<E> c=(Class<E>) src.getClass();
-		if(ignoreFields){
-			Set<String> fset=new HashSet<String>(Arrays.asList(fields));
-			Field[] fs=c.getDeclaredFields();
-			for(int i=0,l=fs.length;i<l;i++){
-				Field f=fs[i];
-				f.setAccessible(true);
-				String fname=f.getName();
-				if(!fset.contains(fname)){
+	public static <E> E populate(E e, Object src, String[] fields, boolean ignoreFields, boolean populateEmpty){
+		try{
+			Class<E> c=(Class<E>) src.getClass();
+			if(ignoreFields){
+				Set<String> fset=new HashSet<String>(Arrays.asList(fields));
+				Field[] fs=c.getDeclaredFields();
+				for(int i=0,l=fs.length;i<l;i++){
+					Field f=fs[i];
+					f.setAccessible(true);
+					String fname=f.getName();
+					if(!fset.contains(fname)){
+						populate(e,fname,f.get(src),populateEmpty);
+					}
+				}
+			}else{
+				for(int i=0,l=fields.length;i<l;i++){
+					String fname=fields[i];
+					Field f=c.getDeclaredField(fname);
+					f.setAccessible(true);
 					populate(e,fname,f.get(src),populateEmpty);
 				}
 			}
-		}else{
-			for(int i=0,l=fields.length;i<l;i++){
-				String fname=fields[i];
-				Field f=c.getDeclaredField(fname);
-				f.setAccessible(true);
-				populate(e,fname,f.get(src),populateEmpty);
-			}
+			return e;
+		}catch(Exception ex){
+			throw new ObjectPopulationException(ex);
 		}
-		return e;
 	}
 	public static <E> E merge(E dst, Object... src){
 		for(int i=0,l=src.length;i<l;i++){
@@ -1221,6 +1303,39 @@ public class Help {
 			}
 		}
 		return dst;
+	}
+	public static <E> E[] merge(E[] dst, E[]... src){
+		Collection c=Arrays.asList(dst);
+		for(int i=0,l=src.length;i<l;i++){
+			c=merge(c,Arrays.asList(src[i]));
+		}
+//		Object r=Array.newInstance(dst.getClass(), c.size());
+//		System.arraycopy(c.toArray(), 0, r, 0, c.size());
+		return (E[])c.toArray();
+	}
+	public static <E> E[] merge(E[] dst, E... src){
+		Object r=Array.newInstance(dst.getClass(), dst.length+src.length);
+		System.arraycopy(dst, 0, r, 0, dst.length);
+		System.arraycopy(src, 0, r, dst.length, src.length);
+		return (E[])r;
+	}
+	public static byte[] merge(byte[] dst, byte... src){
+		byte[] r=new byte[dst.length+src.length];
+		System.arraycopy(dst, 0, r, 0, dst.length);
+		System.arraycopy(src, 0, r, dst.length, src.length);
+		return r;
+	}
+	public static int[] merge(int[] dst, int... src){
+		int[] r=new int[dst.length+src.length];
+		System.arraycopy(dst, 0, r, 0, dst.length);
+		System.arraycopy(src, 0, r, dst.length, src.length);
+		return r;
+	}
+	public static long[] merge(long[] dst, long... src){
+		long[] r=new long[dst.length+src.length];
+		System.arraycopy(dst, 0, r, 0, dst.length);
+		System.arraycopy(src, 0, r, dst.length, src.length);
+		return r;
 	}
 	public static <E> E[] merge(Class<E> cls, E[]... src){
 		E[] dst=null,src1=src[0];
@@ -1343,24 +1458,6 @@ public class Help {
 		return list;
 	}
 	
-	/**
-	 * 得到发起请求的ip
-	 * @param request
-	 * @return
-	 */
-	public static String getIp(HttpServletRequest request){
-		String[] header=new String[]{"x-forwarded-for","Proxy-Client-IP","WL-Proxy-Client-IP"};
-		String ip=null;
-		int i=0,l=header.length;
-		do{
-			ip=request.getHeader(header[i]);
-		}while(++i<l && (isEmpty(ip) || "unknown".equalsIgnoreCase(ip)));
-		if(isEmpty(ip) || "unknown".equalsIgnoreCase(ip)){
-			ip = request.getRemoteAddr();
-		}
-		return ip;
-	}
-	
 	public static <T> T sync(Task task, Lock lock) throws Throwable{
 		try{
 			lock.lock();
@@ -1473,6 +1570,24 @@ public class Help {
     public static String getIpStringFromBytes(byte[] ip) {
     	return ""+(ip[0]&0xff)+'.'+(ip[1]&0xff)+'.'+(ip[2]&0xff)+'.'+(ip[3]&0xff);
     }
+    private static final char[] radix64={'q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m','0','1','2','3','4','5','6','7','8','9','Q','W','E','R','T','Y','U','I','O','P','A','S','D','F','G','H','J','K','L','Z','X','C','V','B','N','M','-','_'};
+	/**
+	 * 任意字符串转化成64进制字符串，包含大小写字母、数字、-、_。以utf8编码转化参数
+	 * @param src
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 */
+    public static String toRadix64(String src) throws UnsupportedEncodingException{
+		BigInteger md5=new BigInteger(src.getBytes("utf8"));
+		BigInteger radix=new BigInteger("64");
+        StringBuilder result=new StringBuilder(0);
+        while(!md5.equals(BigInteger.ZERO)){
+        	BigInteger tmp=md5.divide(radix);
+            result.append(radix64[md5.mod(radix).intValue()]);
+            md5=tmp;
+        }
+        return result.toString();
+	}
 	/**
 	 * 获得参数的所有属性并格式化成字符串
 	 * 不要试图用这个方法重写类的toString()方法，这个方法仅用于测试时方便把对象字符串化输出到控制台。
@@ -1505,6 +1620,21 @@ public class Help {
 					result.append(recursive).append(toString(Array.get(o, i),recursive+'\t')).append(",\r\n");
 				}
 				return result.append(recursive).append("]\r\n").toString();
+			}else if(o instanceof Collection){
+				StringBuilder result=new StringBuilder("[\r\n");
+				for(Object oe:(Collection)o){
+					result.append(recursive).append(toString(oe,recursive+'\t')).append(",\r\n");
+				}
+				return result.append(recursive).append("]\r\n").toString();
+			}else if(o instanceof Map){
+				StringBuilder result=new StringBuilder("{\r\n");
+				Map map=(Map)o;
+				Set set=map.entrySet();
+				for(Object oe:set){
+					Map.Entry entry=(Map.Entry)oe;
+					result.append(recursive).append(entry.getKey()).append(':').append(toString(entry.getValue(),recursive+'\t')).append(";\r\n");
+				}
+				return result.append(recursive).append("}\r\n").toString();
 			}else{
 				Field[] fs=cls.getDeclaredFields();
 				StringBuilder result=new StringBuilder("{\r\nclass=").append(cls.getName()).append(";\r\n");
@@ -1521,4 +1651,5 @@ public class Help {
 			}
 		}
 	}
+	
 }

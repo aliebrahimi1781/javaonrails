@@ -12,6 +12,7 @@ public class MongoCollectionFactoryBean implements FactoryBean<MongoCollection>{
 	private Jongo jongo;
 	private WriteConcern writeConcern;
 	private MongoCollection mongoCollection;
+	public MongoCollectionFactoryBean(){}
 	public MongoCollectionFactoryBean(Jongo jongo, String collection) {
 		this.jongo=jongo;
 		this.collection=collection;
@@ -45,6 +46,7 @@ public class MongoCollectionFactoryBean implements FactoryBean<MongoCollection>{
 		this.writeConcern = writeConcern;
 	}
 
+	
 	@Override
 	public MongoCollection getObject() throws Exception {
 		if(mongoCollection==null){
