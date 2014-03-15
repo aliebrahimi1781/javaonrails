@@ -6,14 +6,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import redis.clients.jedis.AdvancedJedisCommands;
-import redis.clients.jedis.BasicCommands;
 import redis.clients.jedis.JedisCommands;
-import redis.clients.jedis.MultiKeyCommands;
-import redis.clients.jedis.ScriptingCommands;
 import redis.clients.jedis.ShardedJedis;
 
-public interface RedisConnection extends JedisCommands, MultiKeyCommands, AdvancedJedisCommands, ScriptingCommands, BasicCommands {
+public interface RedisConnection extends JedisCommands{
 	public ShardedJedis getResource();
 	public void returnResource(ShardedJedis jedis);
 	public void returnBrokenResource(ShardedJedis jedis);
@@ -22,6 +18,7 @@ public interface RedisConnection extends JedisCommands, MultiKeyCommands, Advanc
 	public long inc(String key);
 	public long dec(String key);
 	public Long del(String key);
+	public Long del(String... key);
 	public long incBy(String key, long value);
 	public long decBy(String key, long value);
 	public String generateKey(Object... parts);

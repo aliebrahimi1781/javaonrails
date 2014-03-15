@@ -48,8 +48,6 @@ public abstract class ShardedPool<K extends ShardInfo<T>,T> extends Sharded<T,K>
 		super(shards);
 		initPool(poolConfig, factory);
 	}
-
-
 	public void initPool(final GenericKeyedObjectPoolConfig poolConfig,KeyedPooledObjectFactory<K,T> factory) {
     	if (this.internalPool != null) {
     		try {

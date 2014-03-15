@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import me.jor.hibernate.Page;
+
 import org.hibernate.Query;
 import org.springframework.dao.DataAccessException;
 

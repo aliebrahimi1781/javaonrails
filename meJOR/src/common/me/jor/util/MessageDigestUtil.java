@@ -104,7 +104,7 @@ public class MessageDigestUtil{
 			}
 			return result.toString();
 		default:
-			throw new IllegalArgumentException("illegal outputType value:"+outputType);
+			throw new IllegalArgumentException("illegal outputType value, only MessageDigestUtil.MESSAGE_DIGEST_OUTPUT_TYPE_BASE64 and MessageDigestUtil.MESSAGE_DIGEST_OUTPUT_TYPE_HEX are accepted");
 		}
 	}
 	public static byte[] hmac(byte[] src, String algorithm) throws InvalidKeyException, NoSuchAlgorithmException{
@@ -115,6 +115,12 @@ public class MessageDigestUtil{
 	}
 	public static String hmac(String src, String algorithm,int outputType, String charset) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException{
 		return output(hmac(src.getBytes(charset),algorithm),outputType);
+	}
+	public static String hmacBase64(String src,String algorithm,String charset) throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException{
+		return hmac(src,algorithm,MessageDigestUtil.MESSAGE_DIGEST_OUTPUT_TYPE_BASE64,charset);
+	}
+	public static String hmacHex(String src,String algorithm,String charset) throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException{
+		return hmac(src,algorithm,MessageDigestUtil.MESSAGE_DIGEST_OUTPUT_TYPE_HEX,charset);
 	}
 	
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeyException {

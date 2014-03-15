@@ -110,9 +110,9 @@ public class DESede {
         }
         return key;
     }
-	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException {
-		System.out.println(java.util.Arrays.toString(encrypt("helloworld".getBytes("utf8"),"1234567890".getBytes("utf8"))));
-		System.out.println(encryptToBase64("helloworld","1234567890","utf8"));
-		System.out.println(Base64.encode("helloworld".getBytes("utf8")));
-	}
+//	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException {
+//		System.out.println(java.util.Arrays.toString(encrypt("helloworld".getBytes("utf8"),"1234567890".getBytes("utf8"))));
+//		System.out.println(encryptToBase64("helloworld","1234567890","utf8"));
+//		System.out.println(Base64.encode("helloworld".getBytes("utf8")));
+//	}
 }

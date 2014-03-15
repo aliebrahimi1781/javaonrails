@@ -7,6 +7,12 @@
 package me.jor.util;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 public final class Base64 {
 
@@ -21,7 +27,7 @@ public final class Base64 {
     static private final boolean fDebug               = false;
     static final private byte[]  base64Alphabet       = new byte[BASELENGTH];
     static final private char[]  lookUpBase64Alphabet = new char[LOOKUPLENGTH];
-
+    static private Map<Character,Integer> lookUpBase64AlphabetMap;
     static {
         for (int i = 0; i < BASELENGTH; ++i) {
             base64Alphabet[i] = -1;
@@ -41,15 +47,16 @@ public final class Base64 {
         base64Alphabet['/'] = 63;
 
         for (int i = 0; i <= 25; i++) {
-            lookUpBase64Alphabet[i] = (char) ('A' + i);
+            lookUpBase64Alphabet[i] = (char) ('A'+i);
         }
 
         for (int i = 26, j = 0; i <= 51; i++, j++) {
-            lookUpBase64Alphabet[i] = (char) ('a' + j);
+            lookUpBase64Alphabet[i] = (char) ('a'+j);
         }
 
         for (int i = 52, j = 0; i <= 61; i++, j++) {
-            lookUpBase64Alphabet[i] = (char) ('0' + j);
+        	char c=(char)('0'+j);
+            lookUpBase64Alphabet[i] = (char) ('0'+j);
         }
         lookUpBase64Alphabet[62] = (char) '+';
         lookUpBase64Alphabet[63] = (char) '/';
@@ -257,5 +264,26 @@ public final class Base64 {
             }
         }
         return newSize;
+    }
+    public static Map<Character,Integer> getBase64Map(){
+    	if(lookUpBase64AlphabetMap==null){
+    		synchronized(Base64.class){
+    			if(lookUpBase64AlphabetMap==null){
+    				lookUpBase64AlphabetMap=new HashMap<Character,Integer>();
+    				for(int i=0;i<64;i++){
+    					lookUpBase64AlphabetMap.put(lookUpBase64Alphabet[i], i);
+    				}
+    				lookUpBase64AlphabetMap=Collections.unmodifiableMap(lookUpBase64AlphabetMap);
+    			}
+    		}
+    	}
+    	return lookUpBase64AlphabetMap;
+    }
+    public static List<Character> getBase64List(){
+    	List<Character> list=new ArrayList();
+    	for(int i=0,l=lookUpBase64Alphabet.length;i<l;i++){
+    		list.add(lookUpBase64Alphabet[i]);
+    	}
+    	return Collections.unmodifiableList(list);
     }
 }

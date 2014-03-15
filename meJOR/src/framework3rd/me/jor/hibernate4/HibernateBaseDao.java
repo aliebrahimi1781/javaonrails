@@ -1,8 +1,10 @@
 package me.jor.hibernate4;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,8 +16,8 @@ import java.util.Set;
 import me.jor.exception.CUDException;
 import me.jor.exception.EmptyIDArrayException;
 import me.jor.hibernate.InterfaceHibernateDao;
-import me.jor.hibernate.Page;
 import me.jor.hibernate.UpdateFieldTag;
+import me.jor.hibernate.Page;
 import me.jor.util.Help;
 import me.jor.util.Log4jUtil;
 
@@ -77,7 +79,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param pageSize   分页大小
 	 * @return Page      分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(org.hibernate.Query, org.hibernate.Query, int, int)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(Query countQuery, Query findQuery, int page, int pageSize) {
@@ -102,7 +104,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param param      查询参数
 	 * @return Page      分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(org.hibernate.Query, org.hibernate.Query, int, int)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(Query countQuery, Query findQuery, int page, int pageSize, Map<String, Object> param){
@@ -117,7 +119,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param param      查询参数
 	 * @return Page      分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(org.hibernate.Query, org.hibernate.Query, int, int)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(Query countQuery, Query findQuery, int page, int pageSize, Object... param){
@@ -141,7 +143,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param param      查询参数
 	 * @return Page      分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(org.hibernate.Query, org.hibernate.Query, int, int)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(Query countQuery, Query findQuery, int page, int pageSize, Object param){
@@ -161,7 +163,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param value      查询参数值
 	 * @return Page      分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(org.hibernate.Query, org.hibernate.Query, int, int)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(Query countQuery, Query findQuery, int page, int pageSize, String name, Object value){
@@ -178,7 +180,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  values     查询参数值
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(org.hibernate.Query, org.hibernate.Query, int, int, java.lang.String[], java.lang.Object[])<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(Query countQuery, Query findQuery, int page, int pageSize, String[] names, Object[] values){
@@ -197,7 +199,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  param      查询参数
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(final String countHql, final String findHql,
@@ -217,7 +219,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  param      查询参数
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(final String countHql, final String findHql,
@@ -235,7 +237,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  param      查询参数
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(final String countHql, final String findHql,
@@ -254,7 +256,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  values     查询参数值
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(final String countHql, final String findHql,
@@ -273,7 +275,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  values     查询参数值
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public <T> Page<T> findPage(final String countHql, final String findHql,
@@ -291,7 +293,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  param      查询参数
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public Page<Object[]> findPageBySql(final String countSql, final String findSql,
@@ -309,7 +311,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  value     查询参数值
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public Page<Object[]> findPageBySql(final String countSql, final String findSql,
@@ -327,7 +329,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  values     查询参数值
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public Page<Object[]> findPageBySql(final String countSql, final String findSql,
@@ -344,7 +346,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  param      查询参数
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public Page<Object[]> findPageBySql(final String countSql, final String findSql,
@@ -363,7 +365,7 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 	 * @param  param      查询参数
 	 * @return Page       分页结果集
 	 * @see me.jor.hibernate.InterfaceHibernateDao#findPage(java.lang.String, java.lang.String, int, int, java.util.Map)<br/>
-	 *      me.jor.hibernate.Page
+	 *      me.jor.jdbc.Page
 	 */
 	@Override
 	public Page<Object[]> findPageBySql(final String countSql, final String findSql,
@@ -1167,7 +1169,11 @@ public class HibernateBaseDao implements InterfaceHibernateDao {
 			if (v instanceof Collection) {
 				query.setParameterList(name[i], (Collection) v);
 			} else if (v.getClass().isArray()) {
-				query.setParameterList(name[i], (Object[]) v);
+				List list=new ArrayList();
+				for(int j=0,jl=Array.getLength(v);j<jl;j++){
+					list.add(Array.get(v, j));
+				}
+				query.setParameterList(name[i],list);
 			} else {
 				query.setParameter(name[i], v);
 			}

@@ -11,10 +11,10 @@ public class ObjectPopulationException extends RuntimeException{
 		super();
 	}
 
-	public ObjectPopulationException(String message, Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
+//	public ObjectPopulationException(String message, Throwable cause,
+//			boolean enableSuppression, boolean writableStackTrace) {
+//		super(message, cause, enableSuppression, writableStackTrace);
+//	}
 
 	public ObjectPopulationException(String message, Throwable cause) {
 		super(message, cause);

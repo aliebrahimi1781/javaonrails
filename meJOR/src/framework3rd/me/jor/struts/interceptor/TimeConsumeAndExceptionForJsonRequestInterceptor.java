@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import me.jor.common.Decider;
 import me.jor.common.GlobalObject;
 import me.jor.struts.action.AbstractBaseAction;
 import me.jor.util.Help;
@@ -13,6 +14,7 @@ import me.jor.util.Log4jUtil;
 import org.apache.commons.logging.Log;
 import org.apache.struts2.ServletActionContext;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
@@ -29,6 +31,7 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 	private String defaultCharset;
 	private char logSplitor='|';
 	private boolean debug;
+	private Decider logDecider;
 	public String getDefaultCharset() {
 		return defaultCharset;
 	}
@@ -47,30 +50,62 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 	public void setDebug(boolean debug) {
 		this.debug = debug;
 	}
+	public Decider getLogDecider() {
+		return logDecider;
+	}
+	public void setLogDecider(Decider logDecider) {
+		this.logDecider = logDecider;
+	}
 	private String getParams(AbstractBaseAction action) throws IOException{
 		String params=IOUtil.readString(action.getRequest().getInputStream(), defaultCharset);
 		if(Help.isNotEmpty(params)){
 			params=beforeTransformJson(params);
+			action.getRequest().setAttribute("params",params);
 		}
 		return params;
+	}
+	private boolean decideLog(String url){
+		return logDecider==null || logDecider.decide(url);
+	}
+	private void log(AbstractBaseAction action,Map paramValues,Object resultContent,long start) throws JsonProcessingException{
+		String url=ServletActionContext.getRequest().getServletPath();
+		Map log=new HashMap();
+		log.put("ip",action.getIp());
+		log.put("url", url);
+		if(decideLog(url)){
+			log.put("params", paramValues);
+			log.put("result", resultContent);
+		}
+		log.put("consumed", System.currentTimeMillis()-start);
+		logger.info(GlobalObject.getJsonMapper().writeValueAsString(log));
+	}
+	private void log(AbstractBaseAction action,Object resultContent,Throwable t) throws JsonProcessingException{
+		String url=ServletActionContext.getRequest().getServletPath();
+		Map log=new HashMap();
+		log.put("ip",action.getIp());
+		log.put("url", url);
+		log.put("result", resultContent);
+		StringBuilder logMsg=new StringBuilder(action.getClass().getName()).append(logSplitor);
+		Object params=action.getRequest().getAttribute("params");
+		if(Help.isNotEmpty(params)){
+			logMsg.append(params instanceof String?params:GlobalObject.getJsonMapper().writeValueAsString(params)).append(logSplitor);
+		}
+		log.put("throwable", t.getClass().getName());
+		logger.error(logMsg.append(GlobalObject.getJsonMapper().writeValueAsString(log)),t);
 	}
 	@Override
 	public String intercept(ActionInvocation ai) throws Exception {
 		AbstractBaseAction action=(AbstractBaseAction)ai.getAction();
 		String params=getParams(action);
-		Map log=new HashMap();
-		log.put("ip",action.getIp());
-		log.put("url", ServletActionContext.getRequest().getServletPath());
 		Object resultContent=null;
 		try{
 			long start=System.currentTimeMillis();
 			Map paramValues=null;
 			if(Help.isNotEmpty(params)){
+				paramValues=GlobalObject.getJsonMapper().readValue(params, Map.class);
 				if(debug){
 					action.getRequest().setAttribute("params", paramValues);
 				}
-				paramValues=GlobalObject.getJsonMapper().readValue(params, Map.class);
-				log.put("params", paramValues);
 				Help.populate(action,paramValues,false);
 			}
 			String result=ai.invoke();
@@ -78,21 +113,10 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 			if(Help.isEmpty(resultContent)){
 				resultContent=action.getResult();
 			}
-			log.put("result", resultContent);
-			log.put("consumed", System.currentTimeMillis()-start);
-			logger.info(action.getClass().getName()+logSplitor+GlobalObject.getJsonMapper().writeValueAsString(log));
+			log(action,paramValues,resultContent,start);
 			return result;
 		}catch(Throwable t){
-			log.put("result", resultContent);
-			log.put("throwable", t.getClass().getName());
-			StringBuilder logMsg=new StringBuilder(action.getClass().getName()).append(logSplitor);
-			if(!log.containsKey("params")){
-				params=(String)action.getRequest().getAttribute("params");
-				if(Help.isNotEmpty(params)){
-					logMsg.append(params).append(logSplitor);
-				}
-			}
-			logger.error(logMsg.append(GlobalObject.getJsonMapper().writeValueAsString(log)),t);
+			log(action, resultContent, t);
 			if(Help.isNotEmpty(resultContent)){
 				return ActionSupport.SUCCESS;
 			}else{

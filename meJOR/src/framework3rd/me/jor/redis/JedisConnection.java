@@ -2,7 +2,6 @@ package me.jor.redis;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -10,23 +9,16 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import me.jor.exception.RedisException;
 import me.jor.util.Help;
 import me.jor.util.RegexUtil;
 import redis.clients.jedis.BinaryClient.LIST_POSITION;
-import redis.clients.jedis.BitOP;
-import redis.clients.jedis.DebugParams;
-import redis.clients.jedis.JedisPubSub;
-import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.jedis.SortingParams;
 import redis.clients.jedis.Tuple;
-import redis.clients.jedis.ZParams;
-import redis.clients.util.Slowlog;
 
 public class JedisConnection implements RedisConnection{
 	private boolean toThrowOnError;
@@ -116,7 +108,7 @@ public class JedisConnection implements RedisConnection{
 				try{
 					f=cls.getDeclaredField(fn);
 					f.setAccessible(true);
-					if(isFinalField(f)){
+					if(Help.isFinalOrStaticField(f)){
 						continue;
 					}
 					String v=(String)entry.getValue();
@@ -283,7 +275,7 @@ public class JedisConnection implements RedisConnection{
 			for(int i=0,l=fs.length;i<l;i++){
 				Field f=fs[i];
 				f.setAccessible(true);
-				if(isFinalField(f)){
+				if(Help.isFinalOrStaticField(f)){
 					continue;
 				}
 				try {
@@ -322,7 +314,7 @@ public class JedisConnection implements RedisConnection{
 				try{
 					Field f=c.getDeclaredField(fn);
 					f.setAccessible(true);
-					if(isFinalField(f)){
+					if(Help.isFinalOrStaticField(f)){
 						continue;
 					}
 					Object v=f.get(value);
@@ -433,7 +425,7 @@ public class JedisConnection implements RedisConnection{
 				f=cls.getDeclaredField(fn);
 				f.setAccessible(true);
 				String v=list.get(i);
-				if(isFinalField(f) || v==null){
+				if(Help.isFinalOrStaticField(f) || v==null){
 					continue;
 				}
 				if(f.getType()==Date.class){
@@ -508,7 +500,7 @@ public class JedisConnection implements RedisConnection{
 			for(int i=0,l=fs.length;i<l;i++){
 				Field f=fs[i];
 				f.setAccessible(true);
-				if(isFinalField(f)){
+				if(Help.isFinalOrStaticField(f)){
 					continue;
 				}
 				try {
@@ -904,7 +896,7 @@ public class JedisConnection implements RedisConnection{
 			for(int i=0,l=fs.length;i<l;i++){
 				Field f=fs[i];
 				f.setAccessible(true);
-				if(isFinalField(f)){
+				if(Help.isFinalOrStaticField(f)){
 					continue;
 				}
 				try {
@@ -935,7 +927,7 @@ public class JedisConnection implements RedisConnection{
 			for(int i=0,l=fs.length;i<l;i++){
 				Field f=fs[i];
 				f.setAccessible(true);
-				if(isFinalField(f)){
+				if(Help.isFinalOrStaticField(f)){
 					continue;
 				}
 				try {
@@ -1049,7 +1041,7 @@ public class JedisConnection implements RedisConnection{
 		for(int i=0,l=fs.length;i<l;i++){
 			Field f=fs[i];
 			f.setAccessible(true);
-			if(isFinalField(f)){
+			if(Help.isFinalOrStaticField(f)){
 				continue;
 			}
 			try {
@@ -1077,7 +1069,7 @@ public class JedisConnection implements RedisConnection{
 				try {
 					Field f=c.getDeclaredField(fields[i]);
 					f.setAccessible(true);
-					if(isFinalField(f)){
+					if(Help.isFinalOrStaticField(f)){
 						continue;
 					}
 					hsetnx(key,f.getName(),value2String(f.get(value)));
@@ -1109,9 +1101,7 @@ public class JedisConnection implements RedisConnection{
 		}
 		return v instanceof Date?Long.toString(((Date)v).getTime()):v.toString();
 	}
-	private boolean isFinalField(Field f){
-		return (f.getModifiers()&Modifier.FINAL)>0;
-	}
+	
 
 	@Override
 	public String zindex(String key, long index) {
@@ -1136,514 +1126,4 @@ public class JedisConnection implements RedisConnection{
 		return zindex(key,0);
 	}
 	
-	@Override
-	public Long persist(String key) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Boolean setbit(String key, long offset, String value) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long strlen(String key) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long lpushx(String key, String... string) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long rpushx(String key, String... string) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> blpop(String arg) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> brpop(String arg) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String echo(String string) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long move(String key, int dbIndex) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long bitcount(String key) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long bitcount(String key, long start, long end) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public ScanResult<Entry<String, String>> hscan(String key, int cursor) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public ScanResult<String> sscan(String key, int cursor) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public ScanResult<Tuple> zscan(String key, int cursor) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> blpop(int timeout, String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> brpop(int timeout, String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> blpop(String... args) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> brpop(String... args) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Set<String> keys(String pattern) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> mget(String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String mset(String... keysvalues) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long msetnx(String... keysvalues) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String rename(String oldkey, String newkey) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long renamenx(String oldkey, String newkey) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String rpoplpush(String srckey, String dstkey) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Set<String> sdiff(String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long sdiffstore(String dstkey, String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Set<String> sinter(String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long sinterstore(String dstkey, String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long smove(String srckey, String dstkey, String member) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long sort(String key, SortingParams sortingParameters, String dstkey) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long sort(String key, String dstkey) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Set<String> sunion(String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long sunionstore(String dstkey, String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String watch(String... keys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String unwatch() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long zinterstore(String dstkey, String... sets) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long zinterstore(String dstkey, ZParams params, String... sets) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long zunionstore(String dstkey, String... sets) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long zunionstore(String dstkey, ZParams params, String... sets) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String brpoplpush(String source, String destination, int timeout) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long publish(String channel, String message) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public void subscribe(JedisPubSub jedisPubSub, String... channels) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void psubscribe(JedisPubSub jedisPubSub, String... patterns) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public String randomKey() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long bitop(BitOP op, String destKey, String... srcKeys) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public ScanResult<String> scan(int cursor) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<String> configGet(String pattern) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String configSet(String parameter, String value) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String slowlogReset() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long slowlogLen() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<Slowlog> slowlogGet() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<Slowlog> slowlogGet(long entries) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long objectRefcount(String string) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String objectEncoding(String string) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long objectIdletime(String string) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Object eval(String script, int keyCount, String... params) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Object eval(String script, List<String> keys, List<String> args) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Object eval(String script) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Object evalsha(String script) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Object evalsha(String sha1, List<String> keys, List<String> args) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Object evalsha(String sha1, int keyCount, String... params) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Boolean scriptExists(String sha1) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public List<Boolean> scriptExists(String... sha1) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String scriptLoad(String script) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String ping() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String quit() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String flushDB() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long dbSize() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String select(int index) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String flushAll() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String auth(String password) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String save() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String bgsave() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String bgrewriteaof() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long lastsave() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String shutdown() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String info() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String info(String section) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String slaveof(String host, int port) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String slaveofNoOne() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long getDB() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String debug(DebugParams params) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public String configResetStat() {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
-	@Override
-	public Long waitReplicas(int replicas, long timeout) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("unimplements yet");
-	}
-
 }

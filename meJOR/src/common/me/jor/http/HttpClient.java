@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -29,6 +31,7 @@ import javax.net.ssl.X509TrustManager;
 import me.jor.util.Help;
 
 public class HttpClient {
+	private HttpURLConnection connection;
 	private String url;
 	private String charset;
 	private List<String> cookie;
@@ -102,7 +105,7 @@ public class HttpClient {
 		}
 	}
 	private HttpURLConnection createConnection() throws IOException{
-		HttpURLConnection connection=(HttpURLConnection)new URL(url).openConnection();
+		connection=(HttpURLConnection)new URL(url).openConnection();
 		connection.setDoInput(doInput);
 		connection.setDoOutput(doOutput);
 		connection.setUseCaches(cache);
@@ -124,9 +127,8 @@ public class HttpClient {
 		return communicate(null,"GET");
 	}
 	private String communicate(String content, String method) throws IOException{
-		HttpURLConnection connection=null;
 		try{
-			connection=createConnection();
+			createConnection();
 			connection.setRequestMethod(method);
 			connection.connect();
 			if(content!=null){
@@ -179,7 +181,9 @@ public class HttpClient {
 			}
 		}
 	}
-
+	public int getResponseCode() throws IOException{
+		return connection.getResponseCode();
+	}
 	public void setCookie(List<String> cookie) {
 		this.cookie = cookie;
 	}
@@ -257,5 +261,95 @@ public class HttpClient {
 			headers=new HashMap<String,String>();
 		}
 		headers.put(name, value);
+	}
+	
+	private static String HTTP_PROXY_HOST="http.proxyHost";
+	private static String HTTP_PROXY_PORT="http.proxyPort";
+	private static String HTTP_NON_PROXY_HOST="http.nonProxyHosts";
+	private static String HTTPS_PROXY_HOST="https.proxyHost";
+	private static String HTTPS_PROXY_PORT="https.proxyPort";
+	private static Pattern STARTS_WITH_OR_SYMBOL=Pattern.compile("^\\|");
+	private static Pattern ENDS_WITH_OR_SYMBOL=Pattern.compile("\\|$");
+	private static Pattern DOUBLE_OR_SYMBOL=Pattern.compile("\\|\\|");
+	private static void addProxyHost(String name,String value){
+		Properties props=System.getProperties();
+		String host=props.getProperty(name);
+		if(Help.isEmpty(host)){
+			props.setProperty(name, value);
+		}else{
+			props.setProperty(name, host+'|'+value);
+		}
+	}
+	private static void setProxyPort(String name, int port){
+		System.getProperties().setProperty(name,Integer.toString(port));
+	}
+	private static void replaceProxyHost(String name, String ip){
+		System.getProperties().setProperty(name, ip);
+	}
+	private static void removeProxyHost(String name,String ip){
+		Properties props=System.getProperties();
+		String host=props.getProperty(name);
+		if(Help.isNotEmpty(host)){
+			int start=host.indexOf(ip);
+			if(start>=0){
+				int end=start+ip.length();
+				ip=STARTS_WITH_OR_SYMBOL.matcher(new StringBuilder(host).replace(start, end, ip)).replaceFirst("");
+				ip=ENDS_WITH_OR_SYMBOL.matcher(ip).replaceFirst("");
+				ip=DOUBLE_OR_SYMBOL.matcher(ip).replaceAll("");
+				props.setProperty(name, ip);
+			}
+		}
+	}
+	public static void addHttpProxyHost(String ip){
+		addProxyHost(HTTP_PROXY_HOST,ip);
+	}
+	public static void setHttpProxyPort(int port){
+		setProxyPort(HTTP_PROXY_PORT,port);
+	}
+	public static void replaceHttpProxyHost(String ip){
+		replaceProxyHost(HTTP_PROXY_HOST,ip);
+	}
+	public static void removeHttpProxyHost(String ip){
+		removeProxyHost(HTTP_PROXY_HOST,ip);
+	}
+	public static void removeAllHttpProxy(){
+		Properties props=System.getProperties();
+		props.remove(HTTP_PROXY_HOST);
+		props.remove(HTTP_PROXY_PORT);
+	}
+	
+	public static void addNonHttpProxyHost(String ip){
+		addProxyHost(HTTP_NON_PROXY_HOST,ip);
+	}
+	public static void replaceNonHttpProxyHost(String ip){
+		replaceProxyHost(HTTP_NON_PROXY_HOST,ip);
+	}
+	public static void removeNonHttpProxyHost(String ip){
+		removeProxyHost(HTTP_NON_PROXY_HOST,ip);
+	}
+	public static void removeAllNonHttpProxy(){
+		System.getProperties().remove(HTTP_NON_PROXY_HOST);
+	}
+	
+	public static void addHttpsProxyHost(String ip){
+		addProxyHost(HTTPS_PROXY_HOST,ip);
+	}
+	public static void setHttpsProxyPort(int port){
+		setProxyPort(HTTPS_PROXY_PORT,port);
+	}
+	public static void replaceHttpsProxyHost(String ip){
+		replaceProxyHost(HTTPS_PROXY_HOST,ip);
+	}
+	public static void removeHttpsProxyHost(String ip){
+		removeProxyHost(HTTPS_PROXY_HOST,ip);
+	}
+	public static void removeAllHttpsProxy(){
+		Properties props=System.getProperties();
+		props.remove(HTTPS_PROXY_HOST);
+		props.remove(HTTPS_PROXY_PORT);
+	}
+	public static void removeAllProxy(){
+		removeAllHttpProxy();
+		removeAllHttpsProxy();
 	}
 }

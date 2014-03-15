@@ -172,7 +172,7 @@ public class EnhancedSymmetricEncryptor {
 	public byte[] encrypt(byte[] src) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException{
 		return cipher(Cipher.ENCRYPT_MODE,src);
 	}
-													
+
 	public String decryptFromBase64(String src) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException {												
 		return new String(decrypt(Base64.decode(src)),charset);
 	}
@@ -195,8 +195,8 @@ public class EnhancedSymmetricEncryptor {
 //		}
 //		System.out.println(l+"    "+l/10000.0);
 //		System.out.println(encrypt.length()+"    "+encrypt);
-		System.out.println(getAES("19hlcHCh13070t43","k760jv5Ab1HdPffs","yx30x0j603N9zjgm","UTF-8").encryptToBase64("abcdefghijklmnopqrstuvwxyz123456"));
-		System.out.println("4bKD8T/2zyzebKxCH0pMyAv0xi6zLJSatUOskOF3fY0ty+itTEdzMlhY9/iJqbrM".length());
+		System.out.println(getAES("r1pcL0e9jJfur0Zv","Pwwgspjh0ukzupxy","zifteQKXAqzlaJ5w","UTF-8").decryptFromBase64("69gRLRUPO3Kz0evAr0XAbw=="));
+//		System.out.println("4bKD8T/2zyzebKxCH0pMyAv0xi6zLJSatUOskOF3fY0ty+itTEdzMlhY9/iJqbrM".length());
 //		System.out.println(getAES("19hlcHCh13070t43","k760jv5Ab1HdPffs","yx30x0j603N9zjgm","UTF-8").decryptFromBase64("vAu8j0fo3auHBxUzvaxxrQ=="));
 	}
 }

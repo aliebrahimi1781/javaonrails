@@ -1,5 +1,6 @@
 package me.jor.util;
 
+import java.io.UnsupportedEncodingException;
 import java.util.regex.Pattern;
 
 public class RegexUtil {
@@ -177,7 +178,11 @@ public class RegexUtil {
 		return getRegex(regex).matcher(src).replaceAll(replacement);
 	}
 	
-	public static void main(String[] args) {
-		System.out.println(isMac("4c:aa:16:bd:d9:0d"));
+	public static void main(String[] args) throws UnsupportedEncodingException {
+		for(char start='\u4e00';start<='\u9fa5';start++){
+			String c=Character.toString(start);
+			int l=c.getBytes("UTF-8").length;
+			System.out.println(c+"	"+l+"	"+(l!=3?true:false));
+		}
 	}
 }

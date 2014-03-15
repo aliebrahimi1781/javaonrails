@@ -1,9 +1,14 @@
 package me.jor.redis;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.regex.Pattern;
+
+import me.jor.util.Help;
 
 import org.apache.commons.pool2.KeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -37,8 +42,8 @@ public class ShardedJedisPool extends ShardedPool<JedisShardInfo,Jedis> {
     private class PipelineJedisPair{
     	public Pipeline pipeline;
     	public Jedis jedis;
-    	public PipelineJedisPair(Pipeline pipeline,Jedis jedis){
-    		this.pipeline=pipeline;
+    	public PipelineJedisPair(Jedis jedis){
+    		this.pipeline=jedis.pipelined();
     		this.jedis=jedis;
     	}
     }
@@ -53,14 +58,22 @@ public class ShardedJedisPool extends ShardedPool<JedisShardInfo,Jedis> {
     		}
     		return jsi;
     	}
+    	/**
+    	 * 根据key得到Pipeline对象，传入不同的key，返回的Pipeline对象也可能不同
+    	 * @param key
+    	 * @return
+    	 */
     	public Pipeline getResource(String key){
     		JedisShardInfo jsi=getShardInfo(key);
-    		PipelineJedisPair pair=this.resourceMap.get(jsi);
+    		shardMap.put(key, jsi);
+    		return getResource(jsi);
+    	}
+    	public Pipeline getResource(JedisShardInfo jedisShardInfo){
+    		PipelineJedisPair pair=this.resourceMap.get(jedisShardInfo);
     		if(pair==null){
-    			Jedis jedis=ShardedJedisPool.this.getResource(jsi);
-    			shardMap.put(key, jsi);
-    			pair=new PipelineJedisPair(jedis.pipelined(),jedis);
-    			resourceMap.put(jsi, pair);
+    			Jedis jedis=ShardedJedisPool.this.getResource(jedisShardInfo);
+    			pair=new PipelineJedisPair(jedis);
+    			resourceMap.put(jedisShardInfo, pair);
     		}
     		return pair.pipeline;
     	}
@@ -112,6 +125,57 @@ public class ShardedJedisPool extends ShardedPool<JedisShardInfo,Jedis> {
     			}catch(Exception e){}
     		}
     	}
+    	public Iterator<String> iterateKeys(final String keyPattern){
+    		return new Iterator<String>(){
+    			Iterator<JedisShardInfo> jedisShardInfoIterator=ShardedJedisPool.this.iterator();
+    			private Iterator<String> currentShardIterator;
+    			private JedisShardInfo currentShard;
+    			private Pipeline currentPipeline;
+    			private String currentKey;
+    			@Override
+    			public boolean hasNext() {
+    				boolean hasNext=currentShardIterator!=null && currentShardIterator.hasNext();
+    				while(!hasNext){
+    					while(jedisShardInfoIterator.hasNext()){
+    						currentShard=jedisShardInfoIterator.next();
+    						currentPipeline=PipelinedShardedJedisPool.this.getResource(currentShard);
+    						Set<String> set=currentPipeline.keys(keyPattern).get();
+    						if(Help.isNotEmpty(set)){
+    							currentShardIterator=set.iterator();
+    							break;
+    						}
+    					}
+    					hasNext=currentShardIterator!=null && currentShardIterator.hasNext();
+    				}
+    				if(!hasNext){
+    					jedisShardInfoIterator=null;
+    					currentShardIterator=null;
+    					currentShard=null;
+    					currentPipeline=null;
+    					currentKey=null;
+    				}
+    				return hasNext;
+    			}
+    			@Override
+    			public String next() {
+    				if(currentShardIterator==null){
+    					throw new NoSuchElementException("there has been nothing to iterate yet");
+    				}
+    				return currentKey=currentShardIterator.next();
+    			}
+    			@Override
+    			public void remove() {
+    				if(currentKey!=null){
+    					currentPipeline.del(currentKey);
+    					currentShardIterator.remove();
+    					currentKey=null;
+    				}else{
+    					throw new IllegalStateException("the method Iterator.next() should be invoked before invoking Iterator.remove()");
+    				}
+    			}
+    			
+    		};
+    	}
     }
     
     /**
@@ -146,4 +210,5 @@ public class ShardedJedisPool extends ShardedPool<JedisShardInfo,Jedis> {
 			}
 		}
     }
+
 }

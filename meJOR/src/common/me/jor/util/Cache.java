@@ -1,7 +1,7 @@
 package me.jor.util;
 
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;

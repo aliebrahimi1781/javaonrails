@@ -13,6 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.ParseException;
@@ -231,25 +232,28 @@ public class Help {
 	public static Date txtToDate(String date) throws ParseException{
 		return txtToDate(date, datetimeFormat);
 	}
+	public static Date addDateFromTodayStart(int date){
+		Calendar c=Calendar.getInstance();
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE,0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+		if(date!=0){
+			c.add(Calendar.DATE, date);
+		}
+		return c.getTime();
+	}
+	public static Date yestoday(){
+		return addDateFromTodayStart(-1);
+	}
 	/**
 	 * 得到当天00:00:00.000的时刻
 	 */
 	public static Date today(){
-		Calendar c=Calendar.getInstance();
-		c.set(Calendar.HOUR_OF_DAY, 0);
-		c.set(Calendar.MINUTE,0);
-		c.set(Calendar.SECOND, 0);
-		c.set(Calendar.MILLISECOND, 0);
-		return c.getTime();
+		return addDateFromTodayStart(0);
 	}
 	public static Date tomorrow(){
-		Calendar c=Calendar.getInstance();
-		c.set(Calendar.HOUR_OF_DAY, 0);
-		c.set(Calendar.MINUTE,0);
-		c.set(Calendar.SECOND, 0);
-		c.set(Calendar.MILLISECOND, 0);
-		c.add(Calendar.DATE, 1);
-		return c.getTime();
+		return addDateFromTodayStart(1);
 	}
 	/**
 	 * 为date在指定的时间域增加amount，amount支持负数，借助Calendar.add(field,amount)实现
@@ -274,6 +278,15 @@ public class Help {
 		Calendar calendar=Calendar.getInstance();
 		calendar.setTime(date);
 		calendar.set(timeField, value);
+		return calendar.getTime();
+	}
+	public static Date dateStart(Date date){
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
 		return calendar.getTime();
 	}
 	/**
@@ -1013,6 +1026,23 @@ public class Help {
 		}
 	}
 	/**
+	 * @param f 要检查的对象属性
+	 * @return
+	 */
+	public static boolean isFinalField(Field f){
+		return (f.getModifiers()&Modifier.FINAL)>0;
+	}
+	/**
+	 * @param f  要检查的Field对象
+	 * @return
+	 */
+	public static boolean isStaticField(Field f){
+		return (f.getModifiers()&Modifier.STATIC)>0;
+	}
+	public static boolean isFinalOrStaticField(Field f){
+		return isFinalField(f) || isStaticField(f);
+	}
+	/**
 	 * 将value值赋给对象的field属性
 	 * @param <E>
 	 * @param e 对象
@@ -1026,6 +1056,9 @@ public class Help {
 	 */
 	public static <E> E populate(E e, Field field, Class fieldType, Object value){
 		try{
+			if(isFinalOrStaticField(field)){
+				return e;
+			}
 			field.setAccessible(true);
 			if(value instanceof String){
 				field.set(e,parse(fieldType,trim((String)value)));
@@ -1188,7 +1221,7 @@ public class Help {
 						populate(dst,f,f.getType(),v);
 					}catch(Exception ex){};
 				}
-			}catch(NoSuchFieldException | IllegalArgumentException | IllegalAccessException e){}
+			}catch(Exception e){}
 		}
 		return dst;
 	}
@@ -1205,7 +1238,7 @@ public class Help {
 	public static <E> E populate(Class<E> c, Map<String,Object> src, boolean populateEmpty){
 		try {
 			return populate(c.newInstance(),src,populateEmpty);
-		} catch (InstantiationException | IllegalAccessException e) {
+		} catch (Exception e) {
 			throw new ObjectPopulationException(e);
 		}
 	}
@@ -1218,14 +1251,14 @@ public class Help {
 	public static <E> E populate(Class<E> c, Map<String, Object> src, String[] fields, boolean ignoreFields, boolean populateEmpty){
 		try {
 			return populate(c.newInstance(),src,fields,ignoreFields,populateEmpty);
-		} catch (InstantiationException | IllegalAccessException e) {
+		} catch (Exception e) {
 			throw new ObjectPopulationException(e);
 		}
 	}
 	public static <E> E populate(Class<E> c, Object src, String[] fields, boolean ignoreFields, boolean populateEmpty){
 		try {
 			return populate(c.newInstance(),src,fields,ignoreFields,populateEmpty);
-		} catch (InstantiationException | IllegalAccessException e) {
+		} catch (Exception e) {
 			throw new ObjectPopulationException(e);
 		}
 	}

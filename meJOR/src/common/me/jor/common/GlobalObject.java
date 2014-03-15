@@ -23,6 +23,7 @@ public final class GlobalObject {
 	private volatile static ExecutorService executorService;
 	private volatile static ObjectMapper jsonMapper;
 	private volatile static ObjectMapper bsonMapper;
+	
 	/**
 	 * 全局ExecutorService对象，对于基础代码中需要用到的线程池可使用此对象
 	 * 常量定义文件的key是：properties.dev.project.globalobject.executorservice取值有：正整数 SINGLE CACHE
