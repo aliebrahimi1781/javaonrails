@@ -11,7 +11,7 @@
          <property name="mailSender">
             <bean class="org.springframework.mail.javamail.JavaMailSenderImpl" scope="prototype">
 		        <property name="host">
-		            <value>smtp</value><!-- smtp -->
+		            <value>smtp.exmail.qq.com</value><!-- smtp服务器域名 -->
 		        </property>
 		        <property name="username">
 		            <value></value><!-- 发件人电邮账号 -->
@@ -43,14 +43,17 @@
          </property>
          <property name="from">
             <value></value><!-- 发件人 -->
+         </property>
+         <property name="mailto">
+            <value></value><!-- 收件人 -->
           </property>
-          <property name="subject">
+         <property name="subject">
             <value>异常账号</value>
-          </property>
-          <property name="contentTemplate">
+         </property>
+         <property name="contentTemplate">
             <value>
                 <![CDATA[。。。。]]><!-- 电邮内容 -->
             </value>
-          </property>
+         </property>
     </bean>
 </beans>

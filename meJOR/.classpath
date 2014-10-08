@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="codereview/|jetty/|pool/|ruleengine/|socket/|common/|framework3rd/|test/" kind="src" path="src"/>
 	<classpathentry kind="src" path="src/codereview"/>
-	<classpathentry kind="src" path="src/common"/>
 	<classpathentry kind="src" path="src/framework3rd"/>
 	<classpathentry kind="src" path="src/jetty"/>
 	<classpathentry kind="src" path="src/pool"/>
 	<classpathentry kind="src" path="src/ruleengine"/>
 	<classpathentry kind="src" path="src/socket"/>
 	<classpathentry kind="src" path="src/test"/>
+	<classpathentry kind="src" path="src/common"/>
 	<classpathentry kind="lib" path="lib/activation.jar"/>
 	<classpathentry kind="lib" path="lib/activeio-core-3.1.2.jar"/>
 	<classpathentry kind="lib" path="lib/activemq-core-5.4.0.jar"/>
@@ -24,7 +23,7 @@
 	<classpathentry kind="lib" path="lib/aspectjweaver.jar"/>
 	<classpathentry kind="lib" path="lib/avalon-framework-4.1.3.jar"/>
 	<classpathentry kind="lib" path="lib/axis.jar"/>
-	<classpathentry kind="lib" path="lib/backport-util-concurrent-2.2.jar"/>
+	<classpathentry kind="lib" path="lib/backport-util-concurrent-2.2.jar" sourcepath="C:/Users/me/.m2/repository/backport-util-concurrent/backport-util-concurrent/2.2/backport-util-concurrent-2.2-sources.jar"/>
 	<classpathentry kind="lib" path="lib/bcmail-jdk15on-149.jar"/>
 	<classpathentry kind="lib" path="lib/bcpg-jdk15on-149.jar"/>
 	<classpathentry kind="lib" path="lib/bcpkix-jdk15on-149.jar"/>
@@ -61,7 +60,7 @@
 	<classpathentry kind="lib" path="lib/commons-logging-api-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-net-2.0.jar"/>
 	<classpathentry kind="lib" path="lib/commons-pool-1.5.5.jar"/>
-	<classpathentry kind="lib" path="lib/commons-pool2-2.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-pool2-2.2.jar"/>
 	<classpathentry kind="lib" path="lib/commons-validator-1.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/concurrent-1.3.2.jar"/>
 	<classpathentry kind="lib" path="lib/connector.jar"/>
@@ -178,7 +177,6 @@
 	<classpathentry kind="lib" path="lib/jcommon.jar"/>
 	<classpathentry kind="lib" path="lib/jdbc2_0-stdext.jar"/>
 	<classpathentry kind="lib" path="lib/jdom-1.0.jar"/>
-	<classpathentry kind="lib" path="lib/jedis-2.1.0.jar"/>
 	<classpathentry kind="lib" path="lib/jersey-client-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/jersey-core-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/jersey-server-1.3.jar"/>
@@ -379,5 +377,6 @@
 	<classpathentry kind="lib" path="lib/xstream-1.4.2.jar"/>
 	<classpathentry kind="lib" path="lib/xwork-core-2.3.8.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/jedis-2.1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

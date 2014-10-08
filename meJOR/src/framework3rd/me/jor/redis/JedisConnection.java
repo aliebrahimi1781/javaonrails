@@ -1,5 +1,6 @@
 package me.jor.redis;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -9,8 +10,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import me.jor.common.GlobalObject;
 import me.jor.exception.RedisException;
 import me.jor.util.Help;
 import me.jor.util.RegexUtil;
@@ -19,6 +22,10 @@ import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.jedis.SortingParams;
 import redis.clients.jedis.Tuple;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 public class JedisConnection implements RedisConnection{
 	private boolean toThrowOnError;
@@ -124,7 +131,10 @@ public class JedisConnection implements RedisConnection{
 			throw new RedisException(e);
 		}
 	}
-
+	@Override
+	public String getSet(String key){
+		return execute(JedisMethodHandles.getSet,key);
+	}
 	@Override
 	public Map<String, Object> getMap(String key) {
 		return execute(JedisMethodHandles.hgetAll,key);
@@ -350,6 +360,10 @@ public class JedisConnection implements RedisConnection{
 	@Override
 	public Long expire(String key, int expire) {
 		return execute(JedisMethodHandles.expire,key,expire);
+	}
+	@Override
+	public Long expire(String key, long expire){
+		return expire(key,(int)expire);
 	}
 
 	@Override
@@ -712,11 +726,14 @@ public class JedisConnection implements RedisConnection{
 		return execute(JedisMethodHandles.type,key);
 	}
 
+//	@Override
+//	public Long zadd(String key, Map<String, Double> scoreMembers) {
+//		return execute(JedisMethodHandles.zaddMULTI,key);
+//	}
 	@Override
-	public Long zadd(String key, Map<Double, String> scoreMembers) {
+	public Long zadd(String key, Map<Double, String> members) {
 		return execute(JedisMethodHandles.zaddMULTI,key);
 	}
-
 	@Override
 	public Long zadd(String key, double score, String member) {
 		return execute(JedisMethodHandles.zadd,key,score,member);
@@ -1125,5 +1142,145 @@ public class JedisConnection implements RedisConnection{
 	public String zfirst(String key) {
 		return zindex(key,0);
 	}
-	
+
+	@Override
+	public Map<String, Object> getJsonMap(String key) throws JsonParseException, JsonMappingException, IOException {
+		return getObjectFromJson(key,Map.class);
+	}
+
+	@Override
+	public Map<String, Object> getJsonMap(String key, String... fields)throws JsonParseException, JsonMappingException, IOException {
+		Map map=getJsonMap(key);
+		if(map==null){
+			return null;
+		}else if(Help.isEmpty(fields)){
+			return new HashMap<String,Object>();
+		}else{
+			Map<String,Object> result=new HashMap<>();
+			for(int i=0,l=fields.length;i<l;i++){
+				String k=fields[i];
+				result.put(k, map.get(k));
+			}
+			return result;
+		}
+	}
+
+	@Override
+	public <E> E getObjectFromJson(String key, Class<E> cls) throws JsonParseException, JsonMappingException, IOException {
+		String value=get(key);
+		return value!=null?null:GlobalObject.getJsonMapper().readValue(value, cls);
+	}
+
+	@Override
+	public String setJsonFromObject(String key, Object value) throws JsonProcessingException {
+		if(value==null){
+			String nullString=null;
+			return set(key,nullString);
+		}else{
+			return set(key,GlobalObject.getJsonMapper().writeValueAsString(value));
+		}
+	}
+
+//	@Override
+//	public Long persist(String key) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public Boolean setbit(String key, long offset, String value) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public Long strlen(String key) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public Long lpushx(String key, String... string) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public Long rpushx(String key, String... string) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public List<String> blpop(String arg) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public List<String> brpop(String arg) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public String echo(String string) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public Long move(String key, int dbIndex) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public Long bitcount(String key) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public Long bitcount(String key, long start, long end) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public ScanResult<Entry<String, String>> hscan(String key, int cursor) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public ScanResult<String> sscan(String key, int cursor) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public ScanResult<Tuple> zscan(String key, int cursor) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public ScanResult<Entry<String, String>> hscan(String key, String cursor) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public ScanResult<String> sscan(String key, String cursor) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public ScanResult<Tuple> zscan(String key, String cursor) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+
 }

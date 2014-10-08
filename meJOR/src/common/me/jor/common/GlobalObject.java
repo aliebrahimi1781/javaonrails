@@ -1,5 +1,6 @@
 package me.jor.common;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -82,5 +83,17 @@ public final class GlobalObject {
 			}
 		}
 		return bsonMapper;
+	}
+	
+	private static MethodHandles.Lookup methodHandlesLookup=null;
+	public static MethodHandles.Lookup getMethodHandlesLookup(){
+		if(methodHandlesLookup==null){
+			synchronized(MethodHandles.Lookup.class){
+				if(methodHandlesLookup==null){
+					methodHandlesLookup=MethodHandles.lookup();
+				}
+			}
+		}
+		return methodHandlesLookup;
 	}
 }

@@ -1,16 +1,24 @@
 package me.jor.struts.interceptor;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import me.jor.common.Decider;
 import me.jor.common.GlobalObject;
 import me.jor.struts.action.AbstractBaseAction;
+import me.jor.util.Base64;
 import me.jor.util.Help;
 import me.jor.util.IOUtil;
 import me.jor.util.Log4jUtil;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.struts2.ServletActionContext;
 
@@ -28,10 +36,14 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 	 */
 	private static final long serialVersionUID = 300759252325913128L;
 	private static final Log logger=Log4jUtil.getLog(TimeConsumeAndExceptionForJsonRequestInterceptor.class);
+	private Log actualLogger;
 	private String defaultCharset;
 	private char logSplitor='|';
 	private boolean debug;
 	private Decider logDecider;
+	private List<String> paramsLogFilter;
+	private String loggerName;
+	private boolean mustLog=true;
 	public String getDefaultCharset() {
 		return defaultCharset;
 	}
@@ -56,57 +68,94 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 	public void setLogDecider(Decider logDecider) {
 		this.logDecider = logDecider;
 	}
+	public List<String> getParamsLogFilter() {
+		return paramsLogFilter;
+	}
+	public void setParamsLogFilter(List<String> paramsLogFilter) {
+		this.paramsLogFilter = paramsLogFilter;
+	}
+	public String getLoggerName() {
+		return loggerName;
+	}
+	public void setLoggerName(String loggerName) {
+		this.loggerName = loggerName;
+	}
+	public boolean getMustLog() {
+		return mustLog;
+	}
+	public void setMustLog(boolean mustLog) {
+		this.mustLog = mustLog;
+	}
+	private Log getLogger(){
+		if(actualLogger==null){
+			synchronized(this){
+				if(actualLogger==null){
+					actualLogger=Help.isEmpty(loggerName)?logger:Log4jUtil.getLog(loggerName);
+				}
+			}
+		}
+		return actualLogger;
+	}
 	private String getParams(AbstractBaseAction action) throws IOException{
 		String params=IOUtil.readString(action.getRequest().getInputStream(), defaultCharset);
+		getLogger().debug("TimeConsumeAndExceptionForJsonRequestInterceptor.getParams:"+params);
 		if(Help.isNotEmpty(params)){
 			params=beforeTransformJson(params);
-			action.getRequest().setAttribute("params",params);
 		}
 		return params;
 	}
+	
 	private boolean decideLog(String url){
 		return logDecider==null || logDecider.decide(url);
 	}
 	private void log(AbstractBaseAction action,Map paramValues,Object resultContent,long start) throws JsonProcessingException{
-		String url=ServletActionContext.getRequest().getServletPath();
-		Map log=new HashMap();
-		log.put("ip",action.getIp());
-		log.put("url", url);
-		if(decideLog(url)){
-			log.put("params", paramValues);
-			log.put("result", resultContent);
+		if(mustLog){
+			String url=ServletActionContext.getRequest().getServletPath();
+			Map log=new HashMap();
+			log.put("ip",action.getIp());
+			log.put("url", url);
+			try{
+				log.put("params", filterParams(paramValues));
+			}catch(Exception e){
+				getLogger().error("TimeConsumeAndExceptionForJsonRequestInterceptor.log:"+paramValues,e);
+			}
+			if(decideLog(url)){
+				log.put("result", resultContent);
+			}
+			log.put("consumed", System.currentTimeMillis()-start);
+			getLogger().info(GlobalObject.getJsonMapper().writeValueAsString(log));
 		}
-		log.put("consumed", System.currentTimeMillis()-start);
-		logger.info(GlobalObject.getJsonMapper().writeValueAsString(log));
 	}
-	private void log(AbstractBaseAction action,Object resultContent,Throwable t) throws JsonProcessingException{
-		String url=ServletActionContext.getRequest().getServletPath();
-		Map log=new HashMap();
-		log.put("ip",action.getIp());
-		log.put("url", url);
-		log.put("result", resultContent);
-		StringBuilder logMsg=new StringBuilder(action.getClass().getName()).append(logSplitor);
-		Object params=action.getRequest().getAttribute("params");
-		if(Help.isNotEmpty(params)){
-			logMsg.append(params instanceof String?params:GlobalObject.getJsonMapper().writeValueAsString(params)).append(logSplitor);
+	private void log(AbstractBaseAction action,Map paramValues,Object resultContent,Throwable t) throws JsonProcessingException{
+		if(mustLog){
+			String url=ServletActionContext.getRequest().getServletPath();
+			Map log=new HashMap();
+			log.put("ip",action.getIp());
+			log.put("url", url);
+			log.put("result", resultContent);
+			try{
+				log.put("params", filterParams(paramValues));
+			}catch(Exception e){
+				getLogger().error("TimeConsumeAndExceptionForJsonRequestInterceptor.log:"+paramValues,e);
+			}
+			log.put("throwable", t.getClass().getName());
+			getLogger().error(GlobalObject.getJsonMapper().writeValueAsString(log),t);
 		}
-		log.put("throwable", t.getClass().getName());
-		logger.error(logMsg.append(GlobalObject.getJsonMapper().writeValueAsString(log)),t);
 	}
 	@Override
 	public String intercept(ActionInvocation ai) throws Exception {
 		AbstractBaseAction action=(AbstractBaseAction)ai.getAction();
-		String params=getParams(action);
+		String params=null;
 		Object resultContent=null;
+		Map paramValues=null;
 		try{
 			long start=System.currentTimeMillis();
-			Map paramValues=null;
+			params=getParams(action);
 			if(Help.isNotEmpty(params)){
-				paramValues=GlobalObject.getJsonMapper().readValue(params, Map.class);
-				if(debug){
-					action.getRequest().setAttribute("params", paramValues);
-				}
-				Help.populate(action,paramValues,false);
+				paramValues=beforePopulateParams(GlobalObject.getJsonMapper().readValue(params, Map.class));
+				action.getRequest().setAttribute("params", paramValues);
+//				Help.populate(action,paramValues,false);
+				BeanUtils.copyProperties(action, paramValues);
 			}
 			String result=ai.invoke();
 			resultContent=action.getRequest().getAttribute("result");
@@ -116,7 +165,7 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 			log(action,paramValues,resultContent,start);
 			return result;
 		}catch(Throwable t){
-			log(action, resultContent, t);
+			log(action,paramValues, resultContent, t);
 			if(Help.isNotEmpty(resultContent)){
 				return ActionSupport.SUCCESS;
 			}else{
@@ -125,6 +174,17 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 		}
 	}
 	public String beforeTransformJson(String params){
+		return params;
+	}
+	public Map<String,Object> beforePopulateParams(Map<String,Object> params){
+		return params;
+	}
+	public Map filterParams(Map params){
+		if(Help.isNotEmpty(paramsLogFilter) && Help.isNotEmpty(params)){
+			for(String paramName:paramsLogFilter){
+				params.remove(paramName);
+			}
+		}
 		return params;
 	}
 }

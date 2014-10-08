@@ -3,6 +3,7 @@ package me.jor.redis;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+
 public class JedisShardInfo extends redis.clients.jedis.JedisShardInfo{
 
 	public JedisShardInfo(String host, int port, int timeout, int weight) {

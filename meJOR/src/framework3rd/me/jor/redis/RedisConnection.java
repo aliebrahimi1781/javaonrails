@@ -1,10 +1,15 @@
 package me.jor.redis;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import redis.clients.jedis.JedisCommands;
 import redis.clients.jedis.ShardedJedis;
@@ -22,6 +27,7 @@ public interface RedisConnection extends JedisCommands{
 	public long incBy(String key, long value);
 	public long decBy(String key, long value);
 	public String generateKey(Object... parts);
+	public String getSet(String key);
 	public String getString(String key);
 	/**
 	 * redis值是null或空串，返回null；"0" "false",返回false；其它值，返回true。字符串不分大小写
@@ -40,7 +46,6 @@ public interface RedisConnection extends JedisCommands{
 	public BigDecimal lindexBigDecimal(String key,long index);
 	public String get(String key);
 	public <E> E get(String key, Class<E> cls);
-	public Map<String,Object> getMap(String key);
 	public Long set(String key, Map<String,String> value);
 	public String set(String key, Object value);
 	public String set(String key, Object value,String... fields);
@@ -61,7 +66,12 @@ public interface RedisConnection extends JedisCommands{
 	public int del(Object[] keyParts, String... prefix);
 	public Long srem(String key, Object... members);
 	public String hmset(String key, Object value);
+	public Map<String,Object> getMap(String key);
 	public Map<String, String> getMap(String key, String... fields);
+	public Map<String,Object> getJsonMap(String key)throws JsonParseException, JsonMappingException, IOException;
+	public Map<String,Object> getJsonMap(String key, String... fields)throws JsonParseException, JsonMappingException, IOException;
+	public <E> E getObjectFromJson(String key, Class<E> cls)throws JsonParseException, JsonMappingException, IOException;
+	public String setJsonFromObject(String key, Object value) throws JsonProcessingException;
 	public <E> E hmget(String key, Class<E> cls,String... fields) throws Exception;
 	public String hmset(String key, Map<String,Object> hash, String... fields);
 	public String hmset(String key, Object hash, String... fields);
@@ -77,4 +87,5 @@ public interface RedisConnection extends JedisCommands{
 	public int zindexInteger(String key, long index);
 	public long zindexLong(String key, long index);
 	public String zfirst(String key);
+	public Long expire(String key, long expire);
 }

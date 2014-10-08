@@ -137,14 +137,22 @@ public class JedisMethodHandles {
 			llen=lookup.findVirtual(ShardedJedis.class, "llen", MethodType.methodType(Long.class,String.class));
 			lpop=lookup.findVirtual(ShardedJedis.class, "lpop", MethodType.methodType(String.class,String.class));
 			lpush=lookup.findVirtual(ShardedJedis.class, "lpush", MethodType.methodType(Long.class,String.class,String[].class));
-			lpushx=lookup.findVirtual(ShardedJedis.class, "lpushx", MethodType.methodType(Long.class,String.class,String.class));
+			try{
+				lpushx=lookup.findVirtual(ShardedJedis.class, "lpushx", MethodType.methodType(Long.class,String.class,String[].class));
+			}catch(Exception e){
+				lpushx=lookup.findVirtual(ShardedJedis.class, "lpushx", MethodType.methodType(Long.class,String.class,String.class));
+			}
 			lrange=lookup.findVirtual(ShardedJedis.class, "lrange", MethodType.methodType(List.class,String.class,long.class,long.class));
 			lrem=lookup.findVirtual(ShardedJedis.class, "lrem", MethodType.methodType(Long.class,String.class,long.class,String.class));
 			lset=lookup.findVirtual(ShardedJedis.class, "lset", MethodType.methodType(String.class,String.class,long.class,String.class));
 			ltrim=lookup.findVirtual(ShardedJedis.class, "ltrim", MethodType.methodType(String.class,String.class,long.class,long.class));
 			rpop=lookup.findVirtual(ShardedJedis.class, "rpop", MethodType.methodType(String.class,String.class));
 			rpush=lookup.findVirtual(ShardedJedis.class, "rpush", MethodType.methodType(Long.class,String.class,String[].class));
-			rpushx=lookup.findVirtual(ShardedJedis.class, "rpushx", MethodType.methodType(Long.class,String.class,String.class));
+			try{
+				rpushx=lookup.findVirtual(ShardedJedis.class, "rpushx", MethodType.methodType(Long.class,String.class,String[].class));
+			}catch(Exception e){
+				rpushx=lookup.findVirtual(ShardedJedis.class, "rpushx", MethodType.methodType(Long.class,String.class,String.class));
+			}
 			sadd=lookup.findVirtual(ShardedJedis.class, "sadd", MethodType.methodType(Long.class,String.class,String[].class));
 			scard=lookup.findVirtual(ShardedJedis.class, "scard", MethodType.methodType(Long.class,String.class));
 			set=lookup.findVirtual(ShardedJedis.class, "set", MethodType.methodType(String.class,String.class,String.class));

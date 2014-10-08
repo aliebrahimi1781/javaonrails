@@ -11,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -1235,7 +1236,7 @@ public class Help {
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 */
-	public static <E> E populate(Class<E> c, Map<String,Object> src, boolean populateEmpty){
+	public static <E> E populate(Class<E> c, Map<String,?> src, boolean populateEmpty){
 		try {
 			return populate(c.newInstance(),src,populateEmpty);
 		} catch (Exception e) {
@@ -1248,7 +1249,7 @@ public class Help {
 		}
 		return e;
 	}
-	public static <E> E populate(Class<E> c, Map<String, Object> src, String[] fields, boolean ignoreFields, boolean populateEmpty){
+	public static <E> E populate(Class<E> c, Map<String, ?> src, String[] fields, boolean ignoreFields, boolean populateEmpty){
 		try {
 			return populate(c.newInstance(),src,fields,ignoreFields,populateEmpty);
 		} catch (Exception e) {
@@ -1262,10 +1263,10 @@ public class Help {
 			throw new ObjectPopulationException(e);
 		}
 	}
-	public static <E> E populate(E e, Map<String, Object> src, String[] fields, boolean ignoreFields, boolean populateEmpty){
+	public static <E> E populate(E e, Map<String, ?> src, String[] fields, boolean ignoreFields, boolean populateEmpty){
 		if(ignoreFields){
 			Set<String> fset=new HashSet<String>(Arrays.asList(fields));
-			for(Map.Entry<String, Object> entry:src.entrySet()){
+			for(Map.Entry<String, ?> entry:src.entrySet()){
 				String fname=entry.getKey();
 				if(!fset.contains(fname)){
 					populate(e,fname,entry.getValue(),populateEmpty);
@@ -1621,6 +1622,20 @@ public class Help {
         }
         return result.toString();
 	}
+    /**
+     * 得到JAVA进程号
+     * 以使用这个脚本启动（java -Dpid=$$ -jar /Applications/bsh-2.0b4.jar），把JAVA进程号填进System.properties
+     */
+    public static int getPid(){
+    	String pidKey="java.pid";
+    	String pid=System.getProperty(pidKey);
+    	if(isEmpty(pid)){
+    		String pName=ManagementFactory.getRuntimeMXBean().getName();
+    		pid=pName.substring(0,pName.indexOf('@'));
+    		System.setProperty(pidKey, pid);
+    	}
+    	return Integer.parseInt(pid);
+    }
 	/**
 	 * 获得参数的所有属性并格式化成字符串
 	 * 不要试图用这个方法重写类的toString()方法，这个方法仅用于测试时方便把对象字符串化输出到控制台。

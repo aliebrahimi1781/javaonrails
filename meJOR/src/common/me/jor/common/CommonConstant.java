@@ -1,8 +1,10 @@
 package me.jor.common;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,12 +21,18 @@ import org.apache.commons.logging.Log;
  * 加载其中的properties名值对作为常量定义保存在名为PROPERTIES的私有静态属性内<br/>
  * 可通过getProperties()方法获取<br/>
  * 
+ * constant.prefix.properties文件中储存key是constant.prefix的常量，这个常量的值决定加载哪个properties常量文件里的值。
+ * 如果constant.prefix=product，加载的就是product.constant.properties
+ * 
  * properties.dev.reload.period 定义重新载入常量定义文件的周期，默认是60000ms，最好跟properties.dev.reload.period.timeunit搭配使用，否则可能导致周期过短或过长
  * properties.dev.reload.period.timeunit 定义重新载入周期的时间单位，默认是TimeUnit.MILLISECONDS
  * properties.dev.reloadable 如果这个键的值是"1"，就会重新定时重新加载常量定义文件，如果没有定义或者是其它值就不会
  * */
 public final class CommonConstant {
 	private static final Log log=Log4jUtil.getLog(CommonConstant.class);
+	private static final String CONSTANT_PREFIX_FILE="constant.prefix.properties";
+	private static final String CONSTANT_PREFIX="constant.prefix";
+	private static boolean loadScheduled;
 	/**
 	 * 常量属性文件后缀，所有在资源目录中以此结束的文件名都作为常量文件名加载。
 	 * 常量key相同的以最后一次出现的为准
@@ -191,11 +199,28 @@ public final class CommonConstant {
 			}
 		}
 	}
+	private static Properties loadConstantPrefixFile() throws IOException, URISyntaxException{
+		Properties props=System.getProperties();
+		try{
+			props.putAll(Help.loadProperties(new File(CommonConstant.class.getResource("/"+CONSTANT_PREFIX_FILE).toURI())));
+		}catch(Exception e){
+		}finally{
+			return props;
+		}
+	}
+	private static String getConstantPrefix() throws IOException, URISyntaxException{
+		return Help.convert(loadConstantPrefixFile().getProperty(CONSTANT_PREFIX),""); 
+	}
 	public static void loadConstant(){
 		Properties properties=new Properties();
 		try {
+			String prefix=getConstantPrefix();
+			String constantFileName=CONSTANT_PROPERTIES;
+			if(Help.isNotEmpty(prefix)){
+				constantFileName=prefix+'.'+constantFileName;
+			}
 			for(File props:new File(CommonConstant.class.getResource("/").toURI()).listFiles()){
-				if(props.isFile() && props.getName().endsWith(CONSTANT_PROPERTIES)){
+				if(props.isFile() && props.getName().endsWith(constantFileName)){
 					properties.putAll(Help.loadProperties(props, DEFAULT_CHARSET));
 				}
 			}
@@ -203,10 +228,16 @@ public final class CommonConstant {
 		}catch(Exception e) {
 			throw new ConstantLoadingException(e);
 		}
+		if(!loadScheduled){
+			scheduledLoad();
+		}
+	}
+	private static void scheduledLoad(){
 		String periodDef=PROPERTIES.getProperty("properties.dev.reload.period");
 		String timeUnit=PROPERTIES.getProperty("properties.dev.reload.period.timeunit");
 		long delay=Help.isEmpty(periodDef)?60000:Long.parseLong(periodDef);
 		if("1".equals(PROPERTIES.getProperty("properties.dev.reloadable"))){
+			loadScheduled=true;
 			final ScheduledExecutorService ses=Executors.newScheduledThreadPool(1);
 			ses.scheduleWithFixedDelay(new Runnable(){
 				public void run(){

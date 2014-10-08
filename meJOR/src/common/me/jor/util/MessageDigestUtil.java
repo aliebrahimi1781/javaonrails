@@ -126,7 +126,7 @@ public class MessageDigestUtil{
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
 		System.out.println(shaHex("1332004436").toUpperCase());
 		SecretKeySpec signingKey = new SecretKeySpec("a".getBytes("UTF-8"), "hmac-sha1");  
-        Mac mac = Mac.getInstance("HmacSHA1");  
+        Mac mac = Mac.getInstance("hmac-sha1");  
         mac.init(signingKey);  
         byte[] rawHmac = mac.doFinal("1332004436".getBytes("UTF-8"));
         System.out.println(Base64.encode(rawHmac));

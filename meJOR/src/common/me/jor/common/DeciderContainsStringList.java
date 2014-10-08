@@ -47,7 +47,7 @@ public class DeciderContainsStringList extends AbstractDecider implements Decide
 	@Override
 	public boolean decide(String src) {
 		boolean match=false;
-		for(int i=0,l=stringList.length;i<l && !(match=Help.isNotEmpty(src) && src.contains(stringList[i]));i++);
+		for(int i=0,l=stringList.length;i<l && !(match=(Help.isNotEmpty(src) && src.contains(stringList[i])));i++);
 		return decide(match);
 	}
 	

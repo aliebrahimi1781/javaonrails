@@ -92,7 +92,13 @@ public abstract class ShardedPool<K extends ShardInfo<T>,T> extends Sharded<T,K>
     public void returnResource(final K key,final T resource) {
     	returnResourceObject(key,resource);
     }
-
+    public void addObject(K key) throws Exception{
+    	this.internalPool.addObject(key);
+    }
+    public void clear(K key){
+    	this.internalPool.clear(key);
+    }
+    
     public void destroy() {
     	closeInternalPool();
     }

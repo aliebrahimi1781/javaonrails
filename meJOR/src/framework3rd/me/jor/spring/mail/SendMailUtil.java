@@ -1,8 +1,11 @@
 package me.jor.spring.mail;
 
+import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -14,6 +17,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+
+import edu.emory.mathcs.backport.java.util.Arrays;
 
 public class SendMailUtil implements BeanNameAware,Serializable{
     /**
@@ -32,6 +37,7 @@ public class SendMailUtil implements BeanNameAware,Serializable{
     private String contentTemplate;
     private String subject;
     private String beanId;
+    private List<File> attachments;
     
 	public SendMailUtil(){}
 
@@ -53,6 +59,21 @@ public class SendMailUtil implements BeanNameAware,Serializable{
 	public String getContentTemplate() {
 		return contentTemplate;
 	}
+	public List<File> getAttachments(){
+		return this.attachments;
+	}
+	public void setAttachments(List<File> attachments){
+		this.attachments=attachments;
+	}
+	public void addAttachment(File... attachments){
+		addAttachment(Arrays.asList(attachments));
+	}
+	public void addAttachment(List<File> attachments){
+		if(this.attachments==null){
+			this.attachments=new ArrayList<>();
+		}
+		this.attachments.addAll(attachments);
+	}
 
 
     private static final ThreadLocal<String> mailContent=new ThreadLocal<String>();
@@ -64,7 +85,12 @@ public class SendMailUtil implements BeanNameAware,Serializable{
     		msgHelper.setSubject(subject);
     		msgHelper.setText(MAIL_CONTENT_KEY.matcher(Help.convert(mailContent.get(), "")).replaceAll(""),true);
     		msgHelper.setSentDate(new Date());
-
+    		if(Help.isNotEmpty(attachments)){
+    			for(int i=0,l=attachments.size();i<l;i++){
+    				File attachment=attachments.get(i);
+    				msgHelper.addAttachment(attachment.getName(),attachment);
+    			}
+    		}
     		mailSender.send(msgHelper.getMimeMessage());
 		} catch (Exception e){
 			logger.error("SendMailUtil.send()",e);
