@@ -89,7 +89,7 @@ public class DES {
 	}
 	public static void main(String[] args) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, UnsupportedEncodingException, InvalidKeySpecException {
 		String key="ABCDEFGHIJ0123456789ABCD";
-		String iv="A6xrvqTZ";
+		String iv="A6xrvqTZA6xrvqTZ";
 		String content="this is a test，包括中文";
 		DES des=init(algorithm,PADDING,secureAlg,key,iv,"utf8");
 		
