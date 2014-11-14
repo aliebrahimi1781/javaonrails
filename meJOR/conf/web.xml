@@ -24,7 +24,6 @@
 		<!-- 
 		/WEB-INF/classes/applicationContext-dataSource.xml,
 		/WEB-INF/classes/applicationContext-sessionFactory.xml, 
-		/WEB-INF/classes/applicationContext-webservice.xml,
 		/WEB-INF/classes/applicationContext-runtimeupgrade-webservice.xml,
 		/WEB-INF/classes/applicationContext-clientlog-webservice.xml,
 		/WEB-INF/classes/applicationContext-accountDistribution-webservice.xml

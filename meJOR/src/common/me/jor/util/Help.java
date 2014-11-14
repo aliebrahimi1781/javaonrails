@@ -1238,8 +1238,8 @@ public class Help {
 	 */
 	public static <E> E populate(Class<E> c, Map<String,?> src, boolean populateEmpty){
 		try {
-			return populate(c.newInstance(),src,populateEmpty);
-		} catch (Exception e) {
+			return populate(c.newInstance(),(Map<String,Object>)src,populateEmpty);
+		} catch (InstantiationException | IllegalAccessException e) {
 			throw new ObjectPopulationException(e);
 		}
 	}

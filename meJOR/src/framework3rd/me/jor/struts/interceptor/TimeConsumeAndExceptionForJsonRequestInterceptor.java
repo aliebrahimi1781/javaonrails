@@ -126,20 +126,24 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 			getLogger().info(GlobalObject.getJsonMapper().writeValueAsString(log));
 		}
 	}
-	private void log(AbstractBaseAction action,Map paramValues,Object resultContent,Throwable t) throws JsonProcessingException{
+	private void log(AbstractBaseAction action,Object paramValues,Object resultContent,Throwable t) throws JsonProcessingException{
 		if(mustLog){
 			String url=ServletActionContext.getRequest().getServletPath();
 			Map log=new HashMap();
 			log.put("ip",action.getIp());
 			log.put("url", url);
 			log.put("result", resultContent);
-			try{
-				log.put("params", filterParams(paramValues));
-			}catch(Exception e){
-				getLogger().error("TimeConsumeAndExceptionForJsonRequestInterceptor.log:"+paramValues,e);
+			if(paramValues instanceof String){
+				getLogger().error(((String)paramValues)+'|'+GlobalObject.getJsonMapper().writeValueAsString(log),t);
+			}else{
+				try{
+					log.put("params", filterParams((Map)paramValues));
+				}catch(Exception e){
+					getLogger().error("TimeConsumeAndExceptionForJsonRequestInterceptor.log:"+paramValues,e);
+				}
+				log.put("throwable", t.getClass().getName());
+				getLogger().error(GlobalObject.getJsonMapper().writeValueAsString(log),t);
 			}
-			log.put("throwable", t.getClass().getName());
-			getLogger().error(GlobalObject.getJsonMapper().writeValueAsString(log),t);
 		}
 	}
 	@Override
@@ -165,7 +169,7 @@ public class TimeConsumeAndExceptionForJsonRequestInterceptor extends AbstractIn
 			log(action,paramValues,resultContent,start);
 			return result;
 		}catch(Throwable t){
-			log(action,paramValues, resultContent, t);
+			log(action,paramValues==null?params:paramValues, resultContent, t);
 			if(Help.isNotEmpty(resultContent)){
 				return ActionSupport.SUCCESS;
 			}else{
