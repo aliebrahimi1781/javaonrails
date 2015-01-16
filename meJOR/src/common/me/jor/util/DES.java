@@ -89,7 +89,7 @@ public class DES {
 	}
 	public static void main(String[] args) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, UnsupportedEncodingException, InvalidKeySpecException {
 		String key="ABCDEFGHIJ0123456789ABCD";
-		String iv="A6xrvqTZA6xrvqTZ";
+		String iv="A6xrvqTZ";
 		String content="this is a test，包括中文";
 		DES des=init(algorithm,PADDING,secureAlg,key,iv,"utf8");
 		
@@ -105,7 +105,7 @@ public class DES {
 		
         SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(algorithm);  
 //        SecretKey sec = keyFactory.generateSecret(spec);
-        SecretKey sec=new SecretKeySpec(key.getBytes(), algorithm);
+        SecretKey sec=new SecretKeySpec(key.getBytes(), algorithm);//本行与上一行可以互相代替，但是加密结果不同
         IvParameterSpec ivParameters = new IvParameterSpec(iv.getBytes());  
 
         Cipher cipher = Cipher.getInstance(PADDING);  

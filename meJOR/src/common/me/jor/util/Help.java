@@ -14,6 +14,7 @@ import java.io.Writer;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +38,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
+import java.util.regex.Pattern;
 
 import me.jor.common.Task;
 import me.jor.exception.ObjectPopulationException;
+import me.jor.exception.ReflectException;
 
 /**
  * <div>类简介</div>
@@ -1042,6 +1046,32 @@ public class Help {
 	}
 	public static boolean isFinalOrStaticField(Field f){
 		return isFinalField(f) || isStaticField(f);
+	}
+	/**
+	 * 
+	 * @param o      把这个对象的get方法返回值填到一个map对象，get方法名去掉get后首字母转小写作为map的key，get方法返回值作为值
+	 * @param ignore 符合这个正则表达式方法名将被忽略
+	 * @return
+	 */
+	public static Map populateObjectToMap(Object o,Pattern ignore){
+		Class c=o.getClass();
+		Method[] ms=c.getMethods();
+		Map map=new HashMap();
+		for(int i=0,l=ms.length;i<l;i++){
+			Method m=ms[i];
+			String mn=m.getName();
+			if(mn.startsWith("get") && ignore.matcher(mn).matches()){
+				try{
+					Object v=m.invoke(o);
+					if(v==null){
+						map.put(mn.substring(3,1).toLowerCase()+mn.substring(4), v);
+					}
+				}catch(Exception e){
+					throw new ReflectException(e);
+				}
+			}
+		}
+		return map;
 	}
 	/**
 	 * 将value值赋给对象的field属性

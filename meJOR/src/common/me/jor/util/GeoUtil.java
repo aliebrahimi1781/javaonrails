@@ -1,5 +1,8 @@
 package me.jor.util;
 
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.binary.Base32;
+
 
 public class GeoUtil {
 	private static final double RAD = Math.PI / 180.0; 
@@ -49,6 +52,25 @@ public class GeoUtil {
 		}
 		return hash;
 	}
+	public static String enGeoHashCodeTo32Radix(double lng,double lat,int iterate){
+		return Long.toString(enGeoHashCode(lng,lat,iterate),32);
+	}
+	public static String enGeoHashCodeToBase32(double lng,double lat,int iterate) throws EncoderException{
+		long hash=enGeoHashCode(lng,lat,iterate);
+		byte[] hashBytes=new byte[8];
+		int i=0;
+		hashBytes[8-1-i++]=(byte)(hash&0xff);
+		for(;i<8 && hash!=0;i++){
+			hashBytes[8-1-i]=(byte)((hash>>>=8)&0xff);
+		}
+		i=0;
+		while(hashBytes[i]==0){
+			i++;
+		}
+		byte[] finalBytes=new byte[8-i];
+		System.arraycopy(hashBytes, i, finalBytes, 0, finalBytes.length);
+		return new Base32().encodeToString(finalBytes);
+	}
 	/**
 	 * 根据geohash值计算大致的经纬度
 	 * @param hash    geohash
@@ -84,7 +106,18 @@ public class GeoUtil {
 		}
 		return new double[]{midLng,midLat};
 	}
-//	public static void main(String[] args) {
+	public static double[] deGeoHashCodeFromBase32(String hash,int iterate){
+		byte[] hashBytes=new Base32().decode(hash);
+		long hashVal=hashBytes[0]&0xff;
+		for(int i=1,l=hashBytes.length;i<l;i++){
+			hashVal=(hashVal<<8)|(hashBytes[i]&0xff);
+		}
+		return deGeoHashCode(hashVal, iterate);
+	}
+	public static double[] deGeoHashCodeFrom32Radix(String hash,int iterate){
+		return deGeoHashCode(Long.parseLong(hash, 32),iterate);
+	}
+	public static void main(String[] args) throws EncoderException {
 //		//漠河121°07′～124°20′，北纬52°10′～53°33′，
 //		//三亚北纬18°09′34″——18°37′27″、东经108°56′30″——109°48′28″
 //		//0   1   2   3    4      5     6      7       8       9         10           11          12          13             14            15                16                  17                 18
@@ -118,5 +151,6 @@ public class GeoUtil {
 //		System.out.println(hs+"     "+hs.length());
 //		System.out.println(java.util.Arrays.toString(deGeoHashCode(4367129235981861236L,31)));
 //		System.out.println(calculateDistance(122.14591108203125, 52.08983208203125,122.14591101743281, 52.08983200136572));
-//	}
+//		System.out.println(java.util.Arrays.toString(deGeoHashCodeFromBase32(enGeoHashCodeToBase32(113.64401, 37.803851, 32),32)));
+	}
 }

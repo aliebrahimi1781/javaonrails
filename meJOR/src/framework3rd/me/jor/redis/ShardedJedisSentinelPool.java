@@ -77,7 +77,7 @@ public class ShardedJedisSentinelPool extends ShardedJedisPool {
 			  					break outer;
 		  					}finally{
 		  						if(jedis!=null){
-		  							jedis.close();
+		  							jedis.shutdown();//.close();
 		  						}
 		  					}
 		  				} catch (JedisConnectionException e) {}

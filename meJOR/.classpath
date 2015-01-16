@@ -378,5 +378,6 @@
 	<classpathentry kind="lib" path="lib/xwork-core-2.3.8.jar" sourcepath="C:/Users/me/.m2/repository/org/apache/struts/xwork/xwork-core/2.3.8/xwork-core-2.3.8-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/jedis-2.1.0.jar"/>
+	<classpathentry kind="lib" path="lib/rabbitmq-client.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

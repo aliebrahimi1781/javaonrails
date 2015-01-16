@@ -1,19 +1,13 @@
 package me.jor.struts.interceptor;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import me.jor.common.Decider;
 import me.jor.common.GlobalObject;
 import me.jor.struts.action.AbstractBaseAction;
-import me.jor.util.Base64;
 import me.jor.util.Help;
 import me.jor.util.IOUtil;
 import me.jor.util.Log4jUtil;
@@ -23,6 +17,7 @@ import org.apache.commons.logging.Log;
 import org.apache.struts2.ServletActionContext;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.interceptor.AbstractInterceptor;

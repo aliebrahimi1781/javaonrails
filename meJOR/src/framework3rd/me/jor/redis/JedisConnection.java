@@ -5,18 +5,22 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import me.jor.common.GlobalObject;
 import me.jor.exception.RedisException;
 import me.jor.util.Help;
+import me.jor.util.Log4jUtil;
 import me.jor.util.RegexUtil;
+
+import org.apache.commons.logging.Log;
+
 import redis.clients.jedis.BinaryClient.LIST_POSITION;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
@@ -28,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 public class JedisConnection implements RedisConnection{
+	private static final Log log=Log4jUtil.getLog(JedisConnection.class);
 	private boolean toThrowOnError;
 	private ShardedJedisPool jedisPool;
 
@@ -82,6 +87,7 @@ public class JedisConnection implements RedisConnection{
 			if(this.toThrowOnError){
 				throw new RedisException(e);
 			}else{
+				log.error(new StringBuilder("JedisConnection.execute:").append(cmd.toString()).append(":").append(key).append(Arrays.toString(args)).append(" ").append(e.toString()).toString(),e);
 				return null;
 			}
 		}finally{
@@ -1282,5 +1288,4 @@ public class JedisConnection implements RedisConnection{
 //		// TODO Auto-generated method stub
 //		return null;
 //	}
-
 }

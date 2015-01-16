@@ -82,9 +82,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import me.jor.common.CommonConstant;
-
-public class AES extends EnhancedSymmetricEncryptor{
+public class EnhancedSymmetricEncryptor {
 	public static final String KEY_GENERATION_ALGPBEWITHSHAANDTWOFISH_CBC = "PBEWITHSHAANDTWOFISH-CBC";
 	public static final String KEY_GENERATION_ALG_PBKDF2WithHmacSHA1 = "PBKDF2WithHmacSHA1";
 	private static final byte[] salt={ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF };
@@ -128,11 +126,11 @@ public class AES extends EnhancedSymmetricEncryptor{
 	public void setCharset(String charset) {
 		this.charset = charset;
 	}
-	public AES(){}
-	public AES(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,char[] key,byte[] salt, byte[] iv) throws NoSuchAlgorithmException, InvalidKeySpecException{
-			this(algorithm,keyFactoryAlgorithm,secureAlgorithm,padding,hashIterations,keyLength,key,salt,iv,CommonConstant.DEFAULT_CHARSET);
+	public EnhancedSymmetricEncryptor(){}
+	public EnhancedSymmetricEncryptor(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,char[] key,byte[] salt, byte[] iv) throws NoSuchAlgorithmException, InvalidKeySpecException{
+			this(algorithm,keyFactoryAlgorithm,secureAlgorithm,padding,hashIterations,keyLength,key,salt,iv,"utf8");
 	}
-	public AES(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,char[] key,byte[] salt, byte[] iv, String charset) throws NoSuchAlgorithmException, InvalidKeySpecException{
+	public EnhancedSymmetricEncryptor(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,char[] key,byte[] salt, byte[] iv, String charset) throws NoSuchAlgorithmException, InvalidKeySpecException{
 		this.charset=charset;
 		this.iv = new IvParameterSpec(iv);
 		cipherModePadding=algorithm+"/CBC/"+padding+"Padding";
@@ -141,38 +139,29 @@ public class AES extends EnhancedSymmetricEncryptor{
 		this.sk = new SecretKeySpec(
 				SecretKeyFactory.getInstance(keyFactoryAlgorithm).generateSecret(new PBEKeySpec(key, salt, hashIterations, keyLength)).getEncoded(), algorithm);
 	}
-	public AES(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,String key,String salt, String iv, String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+	public EnhancedSymmetricEncryptor(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,String key,String salt, String iv, String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
 		this(algorithm,keyFactoryAlgorithm,secureAlgorithm,padding,hashIterations,keyLength,key.toCharArray(),salt.getBytes(charset),iv.getBytes(charset),charset);
 	}
-	public AES(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,String key,String salt, String iv) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		this(algorithm,keyFactoryAlgorithm,secureAlgorithm,padding,hashIterations,keyLength,key.toCharArray(),salt.getBytes(CommonConstant.DEFAULT_CHARSET),iv.getBytes(CommonConstant.DEFAULT_CHARSET),CommonConstant.DEFAULT_CHARSET);
+	public EnhancedSymmetricEncryptor(String algorithm,String keyFactoryAlgorithm,String secureAlgorithm,String padding,int hashIterations,int keyLength,String key,String salt, String iv) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+		this(algorithm,keyFactoryAlgorithm,secureAlgorithm,padding,hashIterations,keyLength,key.toCharArray(),salt.getBytes("utf8"),iv.getBytes("utf8"),"utf8");
 	}
-	public AES(String algorithm,String padding,int hashIterations,int keyLength,String key,String salt, String iv) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		this(algorithm,KEY_GENERATION_ALG_PBKDF2WithHmacSHA1,secureAlg,padding,hashIterations,keyLength,key.toCharArray(),salt.getBytes(CommonConstant.DEFAULT_CHARSET),iv.getBytes(CommonConstant.DEFAULT_CHARSET),CommonConstant.DEFAULT_CHARSET);
-	}
-	public AES(String algorithm,String padding,int keyLength,String key,String salt, String iv) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		this(algorithm,KEY_GENERATION_ALG_PBKDF2WithHmacSHA1,secureAlg,padding,hashIterations,keyLength,key.toCharArray(),salt.getBytes(CommonConstant.DEFAULT_CHARSET),iv.getBytes(CommonConstant.DEFAULT_CHARSET),CommonConstant.DEFAULT_CHARSET);
-	}
-	public AES(String algorithm,String key,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+	public EnhancedSymmetricEncryptor(String algorithm,String key,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
 		this(algorithm,KEY_GENERATION_ALG_PBKDF2WithHmacSHA1,secureAlg,padding,hashIterations,keyLength,key.toCharArray(),salt,ivbytes,charset);
 	}
-	public AES(String algorithm,String padding,String key,String salt, String iv,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+	public EnhancedSymmetricEncryptor(String algorithm,String key,String salt, String iv,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
 		this(algorithm,KEY_GENERATION_ALG_PBKDF2WithHmacSHA1,secureAlg,padding,hashIterations,keyLength,key.toCharArray(),salt.getBytes(charset),iv.getBytes(charset),charset);
 	}
-	public AES(String algorithm,String key,String salt, String iv,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		this(algorithm,KEY_GENERATION_ALG_PBKDF2WithHmacSHA1,secureAlg,padding,hashIterations,keyLength,key.toCharArray(),salt.getBytes(charset),iv.getBytes(charset),charset);
+	public EnhancedSymmetricEncryptor(String algorithm,String key) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+		this(algorithm,KEY_GENERATION_ALG_PBKDF2WithHmacSHA1,secureAlg,padding,hashIterations,keyLength,key.toCharArray(),salt,ivbytes,"utf8");
 	}
-	public AES(String algorithm,String key) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		this(algorithm,KEY_GENERATION_ALG_PBKDF2WithHmacSHA1,secureAlg,padding,hashIterations,keyLength,key.toCharArray(),salt,ivbytes,CommonConstant.DEFAULT_CHARSET);
+	public static EnhancedSymmetricEncryptor getAES(String key) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+		return new EnhancedSymmetricEncryptor("AES",key);
 	}
-	public static AES getAES(String key) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		return new AES("AES",key);
+	public static EnhancedSymmetricEncryptor getAES(String key,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+		return new EnhancedSymmetricEncryptor("AES",key,charset);
 	}
-	public static AES getAES(String key,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		return new AES("AES",key,charset);
-	}
-	public static AES getAES(String key,String salt,String iv,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
-		return new AES("AES",key,salt,iv,charset);
+	public static EnhancedSymmetricEncryptor getAES(String key,String salt,String iv,String charset) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException{
+		return new EnhancedSymmetricEncryptor("AES",key,salt,iv,charset);
 	}
 	public String encryptToBase64(String src) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException{
 		return encryptToBase64(src.getBytes(charset));
@@ -206,7 +195,7 @@ public class AES extends EnhancedSymmetricEncryptor{
 //		}
 //		System.out.println(l+"    "+l/10000.0);
 //		System.out.println(encrypt.length()+"    "+encrypt);
-//		System.out.println(getAES("r1pcL0e9jJfur0Zv","Pwwgspjh0ukzupxy","zifteQKXAqzlaJ5w","UTF-8").decryptFromBase64("69gRLRUPO3Kz0evAr0XAbw=="));
+		System.out.println(getAES("r1pcL0e9jJfur0Zv","Pwwgspjh0ukzupxy","zifteQKXAqzlaJ5w","UTF-8").decryptFromBase64("69gRLRUPO3Kz0evAr0XAbw=="));
 //		System.out.println("4bKD8T/2zyzebKxCH0pMyAv0xi6zLJSatUOskOF3fY0ty+itTEdzMlhY9/iJqbrM".length());
 //		System.out.println(getAES("19hlcHCh13070t43","k760jv5Ab1HdPffs","yx30x0j603N9zjgm","UTF-8").decryptFromBase64("vAu8j0fo3auHBxUzvaxxrQ=="));
 	}
