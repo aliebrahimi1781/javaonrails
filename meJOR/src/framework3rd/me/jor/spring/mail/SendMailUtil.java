@@ -29,11 +29,14 @@ public class SendMailUtil implements BeanNameAware,Serializable{
 	private static final Log logger=LogFactory.getLog(SendMailUtil.class);
 	
 	private static final Pattern MAIL_CONTENT_KEY=Pattern.compile("#\\w+#");
+	private static final Pattern MAIL_SPLITOR=Pattern.compile("\\s*;\\s*");
 	
 	private JavaMailSender mailSender;
     private MimeMessageHelper msgHelper;
     private String from;
     private String mailto;
+    private String cc;
+    private String bcc;
     private String contentTemplate;
     private String subject;
     private String beanId;
@@ -81,7 +84,15 @@ public class SendMailUtil implements BeanNameAware,Serializable{
 	public void send(){
     	try {
     		msgHelper.setFrom(this.from);
-    		msgHelper.setTo(mailto.split("\\s*;\\s*"));
+    		if(Help.isNotEmpty(mailto)){
+    			msgHelper.setTo(MAIL_SPLITOR.split(mailto));
+    		}
+    		if(Help.isNotEmpty(cc)){
+    			msgHelper.setCc(MAIL_SPLITOR.split(cc));
+    		}
+    		if(Help.isNotEmpty(bcc)){
+    			msgHelper.setBcc(MAIL_SPLITOR.split(bcc));
+    		}
     		msgHelper.setSubject(subject);
     		msgHelper.setText(MAIL_CONTENT_KEY.matcher(Help.convert(mailContent.get(), "")).replaceAll(""),true);
     		msgHelper.setSentDate(new Date());
@@ -136,6 +147,22 @@ public class SendMailUtil implements BeanNameAware,Serializable{
 
 	public void setMailto(String mailto) {
 		this.mailto = mailto;
+	}
+
+	public String getCc() {
+		return cc;
+	}
+
+	public void setCc(String cc) {
+		this.cc = cc;
+	}
+
+	public String getBcc() {
+		return bcc;
+	}
+
+	public void setBcc(String bcc) {
+		this.bcc = bcc;
 	}
 
 	@Override

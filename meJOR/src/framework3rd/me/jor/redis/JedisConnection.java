@@ -22,10 +22,11 @@ import me.jor.util.RegexUtil;
 import org.apache.commons.logging.Log;
 
 import redis.clients.jedis.BinaryClient.LIST_POSITION;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ShardedJedis;
-import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.jedis.SortingParams;
 import redis.clients.jedis.Tuple;
+import redis.clients.util.Pool;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,7 +35,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 public class JedisConnection implements RedisConnection{
 	private static final Log log=Log4jUtil.getLog(JedisConnection.class);
 	private boolean toThrowOnError;
-	private ShardedJedisPool jedisPool;
+	private Pool<ShardedJedis> jedisPool;
 
 	public boolean isToThrowOnError() {
 		return toThrowOnError;
@@ -44,11 +45,11 @@ public class JedisConnection implements RedisConnection{
 		this.toThrowOnError = toThrowOnError;
 	}
 
-	public ShardedJedisPool getJedisPool() {
+	public Pool<ShardedJedis> getJedisPool() {
 		return jedisPool;
 	}
 
-	public void setJedisPool(ShardedJedisPool jedisPool) {
+	public void setJedisPool(Pool<ShardedJedis> jedisPool) {
 		this.jedisPool = jedisPool;
 	}
 
@@ -80,6 +81,7 @@ public class JedisConnection implements RedisConnection{
 			return (E)cmd.invokeWithArguments(params);
 		}catch(Throwable e){
 			//==========start
+			log.error(new StringBuilder("JedisConnection.execute:").append(cmd.toString()).append(":").append(key).append(Arrays.toString(args)).append(" ").append(e.toString()).toString(),e);
 			released=true;
 			returnBrokenResource(jedis);
 			//==========end   如果出了异常或长时间阻塞就把这部分修改如下
@@ -87,7 +89,6 @@ public class JedisConnection implements RedisConnection{
 			if(this.toThrowOnError){
 				throw new RedisException(e);
 			}else{
-				log.error(new StringBuilder("JedisConnection.execute:").append(cmd.toString()).append(":").append(key).append(Arrays.toString(args)).append(" ").append(e.toString()).toString(),e);
 				return null;
 			}
 		}finally{
@@ -1184,6 +1185,15 @@ public class JedisConnection implements RedisConnection{
 			return set(key,nullString);
 		}else{
 			return set(key,GlobalObject.getJsonMapper().writeValueAsString(value));
+		}
+	}
+	
+	@Override
+	public void delKeys(String keyPattern){
+		for(Jedis j:this.jedisPool.getResource().getAllShards()){
+			for(String k:j.keys(keyPattern)){
+				j.del(k);
+			}
 		}
 	}
 

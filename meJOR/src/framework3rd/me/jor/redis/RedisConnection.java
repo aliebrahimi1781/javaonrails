@@ -88,4 +88,5 @@ public interface RedisConnection extends JedisCommands{
 	public long zindexLong(String key, long index);
 	public String zfirst(String key);
 	public Long expire(String key, long expire);
+	public void delKeys(String keyPattern);
 }

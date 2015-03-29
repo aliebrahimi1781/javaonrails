@@ -1,12 +1,16 @@
 package me.jor.util;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.binary.Base32;
 
 
 public class GeoUtil {
-	private static final double RAD = Math.PI / 180.0; 
-	private static final double EARTH_RADIUS = 6378137.0;
+	private static final double RAD = Math.PI / 180.0; //一角度=？弧度
+	private static final double EARTH_RADIUS = 6378137.0;//单位是米
+	
 	/**
 	 * 计算两个经纬度之间的距离，单位是米
 	 * @param lng1  第一个点的经度
@@ -53,17 +57,18 @@ public class GeoUtil {
 		return hash;
 	}
 	public static String enGeoHashCodeTo32Radix(double lng,double lat,int iterate){
-		return Long.toString(enGeoHashCode(lng,lat,iterate),32);
+		long hash=enGeoHashCode(lng,lat,iterate);
+		hash=Help.reverseBits(hash);
+		byte[] buf=Help.transferLongToByteArray(hash);
+		BigInteger hashInt=new BigInteger(1,buf);
+		String result=hashInt.toString(32);
+		result=Help.reverse(result);
+		return result.toUpperCase();
 	}
 	public static String enGeoHashCodeToBase32(double lng,double lat,int iterate) throws EncoderException{
 		long hash=enGeoHashCode(lng,lat,iterate);
-		byte[] hashBytes=new byte[8];
+		byte[] hashBytes=Help.transferLongToByteArray(hash);
 		int i=0;
-		hashBytes[8-1-i++]=(byte)(hash&0xff);
-		for(;i<8 && hash!=0;i++){
-			hashBytes[8-1-i]=(byte)((hash>>>=8)&0xff);
-		}
-		i=0;
 		while(hashBytes[i]==0){
 			i++;
 		}
@@ -108,14 +113,14 @@ public class GeoUtil {
 	}
 	public static double[] deGeoHashCodeFromBase32(String hash,int iterate){
 		byte[] hashBytes=new Base32().decode(hash);
-		long hashVal=hashBytes[0]&0xff;
-		for(int i=1,l=hashBytes.length;i<l;i++){
-			hashVal=(hashVal<<8)|(hashBytes[i]&0xff);
-		}
+		long hashVal=Help.transferByteArrayToLong(hashBytes);
 		return deGeoHashCode(hashVal, iterate);
 	}
 	public static double[] deGeoHashCodeFrom32Radix(String hash,int iterate){
-		return deGeoHashCode(Long.parseLong(hash, 32),iterate);
+		hash=Help.reverse(hash);
+		BigInteger hashInt=new BigInteger(hash,32);
+		long v=hashInt.longValue();
+		return deGeoHashCode(Help.reverseBits(v),iterate);
 	}
 	public static void main(String[] args) throws EncoderException {
 //		//漠河121°07′～124°20′，北纬52°10′～53°33′，
@@ -123,25 +128,34 @@ public class GeoUtil {
 //		//0   1   2   3    4      5     6      7       8       9         10           11          12          13             14            15                16                  17                 18
 //		//90  0   45 22.5 11.25 5.625 2.8125 1.40625 0.703125 0.3515625 0.17578125 0.087890625 0.0439453125 0.02197265625 0.010986328125 0.0054931640625 0.00274608203125  0.001873041015625
 //        //180 0   90 45   22.5  11.25 5.625  2.8125  1.40625  0.703125  0.3515625  0.17578125  0.087890625  0.0439453125  0.02197265625  0.010986328125  0.0054931640625   0.00274608203125  0.001873041015625
-//		double lng1=((121+7/60)+(124+20/60))/2;
-//		double lat1=(52+10/60+53+33/60)/2;
-//		System.out.println(lng1+"     "+lat1);
-//		System.out.println(calculateDistance(lng1,lat1,lng1,52.004492));
-//		System.out.println(calculateDistance(lng1,lat1,122.007296,lat1));
-//		System.out.println(calculateDistance(lng1,lat1,122.007296,52.004492));
-//		System.out.println();
+		double lng1=((121+7/60)+(124+20/60))/2;
+		double lat1=(52+10/60+53+33/60)/2;
+		System.out.println(lng1+"     "+lat1);
+		System.out.println(calculateDistance(lng1,lat1,lng1,52.000179));
+		System.out.println(calculateDistance(lng1,lat1,122.000291,lat1));
+		System.out.println(calculateDistance(lng1,lat1,122.000291,52.000179));
+		System.out.println();
+		System.out.println(GeoUtil.enGeoHashCodeTo32Radix(lng1, lat1, 32));
+		System.out.println(GeoUtil.enGeoHashCodeTo32Radix(122.000291,52.000179, 32));
 //		System.out.println(calculateDistance(lng1,lat1,lng1,52.089832));
 //		System.out.println(calculateDistance(lng1,lat1,122.145911,lat1));
 //		System.out.println(calculateDistance(lng1,lat1,122.145911,52.089832));
 //		
-//		System.out.println("*********************************");
-//		lng1=(108+56/60+30/60/60+109+48/60+28/60/60)/2;
-//		lat1=(18+9/60+34/60/60+18+37/60+27/60/60)/2;
-//		System.out.println(lng1+"   "+lat1);
-//		System.out.println(calculateDistance(lng1,lat1,lng1,18.004492));
-//		System.out.println(calculateDistance(lng1,lat1,108.004723,lat1));
-//		System.out.println(calculateDistance(lng1,lat1,108.004723,18.004492));
-//		System.out.println();
+		System.out.println("*********************************");
+		lng1=(108+56/60+30/60/60+109+48/60+28/60/60)/2;
+		lat1=(18+9/60+34/60/60+18+37/60+27/60/60)/2;
+		System.out.println(lng1+"   "+lat1);
+		System.out.println(calculateDistance(lng1,lat1,lng1,18.000179));
+		System.out.println(calculateDistance(lng1,lat1,108.000188,lat1));
+		System.out.println(calculateDistance(lng1,lat1,108.000188,18.000179));
+		System.out.println();
+		System.out.println(GeoUtil.enGeoHashCodeToBase32(lng1, lat1, 32));
+		System.out.println(GeoUtil.enGeoHashCodeToBase32(108.000188,18.000179, 32));
+		System.out.println(GeoUtil.enGeoHashCode(108.000188,18.000179, 32));
+		System.out.println(GeoUtil.enGeoHashCodeTo32Radix(108.000188,18.000179, 32));
+		System.out.println(Arrays.toString(GeoUtil.deGeoHashCodeFromBase32("4HQ6DYPGM2IOU===", 32)));
+		System.out.println(Arrays.toString(GeoUtil.deGeoHashCodeFrom32Radix("7S1FO3UC6B2E5", 32)));
+		
 //		System.out.println(calculateDistance(lng1,lat1,lng1,18.089832));
 //		System.out.println(calculateDistance(lng1,lat1,108.094455,lat1));
 //		System.out.println(calculateDistance(lng1,lat1,108.094455,18.089832));

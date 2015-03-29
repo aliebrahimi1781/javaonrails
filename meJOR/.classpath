@@ -145,9 +145,6 @@
 	<classpathentry kind="lib" path="lib/itext-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/jaas.jar"/>
 	<classpathentry kind="lib" path="lib/jacc-1_0-fr.jar"/>
-	<classpathentry kind="lib" path="lib/jackson-annotations-2.1.4.jar"/>
-	<classpathentry kind="lib" path="lib/jackson-core-2.1.4.jar"/>
-	<classpathentry kind="lib" path="lib/jackson-databind-2.1.4.jar"/>
 	<classpathentry kind="lib" path="lib/jakarta-oro-2.0.8.jar"/>
 	<classpathentry kind="lib" path="lib/jamon-2.4.jar"/>
 	<classpathentry kind="lib" path="lib/jargs-1.0.jar"/>
@@ -379,5 +376,12 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/jedis-2.1.0.jar"/>
 	<classpathentry kind="lib" path="lib/rabbitmq-client.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-databind-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-datatype-guava-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-datatype-jdk7-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-datatype-joda-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-jr-objects-2.5.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

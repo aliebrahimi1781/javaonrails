@@ -1634,7 +1634,7 @@ public class Help {
     public static String getIpStringFromBytes(byte[] ip) {
     	return ""+(ip[0]&0xff)+'.'+(ip[1]&0xff)+'.'+(ip[2]&0xff)+'.'+(ip[3]&0xff);
     }
-    private static final char[] radix64={'q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m','0','1','2','3','4','5','6','7','8','9','Q','W','E','R','T','Y','U','I','O','P','A','S','D','F','G','H','J','K','L','Z','X','C','V','B','N','M','-','_'};
+    private static final char[] radix64={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','-','_'};
 	/**
 	 * 任意字符串转化成64进制字符串，包含大小写字母、数字、-、_。以utf8编码转化参数
 	 * @param src
@@ -1652,6 +1652,123 @@ public class Help {
         }
         return result.toString();
 	}
+    public static byte[] transferLongToByteArray(long value){
+		byte[] buf=new byte[8];
+		byte mask=(byte)0xff;
+		for(int i=0;value!=0;i++){
+			buf[7-i]=(byte)(value&mask);
+			value>>>=8;
+		}
+		return buf;
+    }
+    public static long transferByteArrayToLong(byte[] value){
+    	long result=0;
+    	for(int i=0,l=8<value.length?8:value.length;i<l;i++){
+    		result=(result<<8)|(value[i]&0xff);
+    	}
+    	return result;
+    }
+    public static byte[] transferIntToByteArray(int value){
+		byte[] buf=new byte[4];
+		byte mask=(byte)0xff;
+		for(int i=0;value!=0;i++){
+			buf[3-i]=(byte)(value&mask);
+			value>>>=8;
+		}
+		return buf;
+    }
+    public static int transferByteArrayToInt(byte[] value){
+    	int result=0;
+    	for(int i=0,l=4<value.length?4:value.length;i<l;i++){
+    		result=(result<<8)|value[i];
+    	}
+    	return result;
+    }
+    public static <T> T[] reverse(T[] value){
+    	int l=value.length;
+    	int lastIdx=l-1;
+    	for(int i=0,c=l/2;i<c;i++){
+    		T t=value[i];
+    		int j=lastIdx-i;
+    		value[i]=value[j];
+    		value[j]=t;
+    	}
+    	return value;
+    }
+    public static int[] reverse(int[] value){
+    	int l=value.length;
+    	int lastIdx=l-1;
+    	for(int i=0,c=l/2;i<c;i++){
+    		int j=lastIdx-i;
+    		value[i]^=value[j];
+    		value[j]^=value[i];
+    		value[i]^=value[j];
+    	}
+    	return value;
+    }
+    public static long[] reverse(long[] value){
+    	int l=value.length;
+    	int lastIdx=l-1;
+    	for(int i=0,c=l/2;i<c;i++){
+    		int j=lastIdx-i;
+    		value[i]^=value[j];
+    		value[j]^=value[i];
+    		value[i]^=value[j];
+    	}
+    	return value;
+    }
+    public static byte[] reverse(byte[] value){
+    	int l=value.length;
+    	int lastIdx=l-1;
+    	for(int i=0,c=l/2;i<c;i++){
+    		int j=lastIdx-i;
+    		value[i]^=value[j];
+    		value[j]^=value[i];
+    		value[i]^=value[j];
+    	}
+    	return value;
+    }
+    public static char[] reverse(char[] value){
+    	int l=value.length;
+    	int lastIdx=l-1;
+    	for(int i=0,c=l/2;i<c;i++){
+    		int j=lastIdx-i;
+    		value[i]^=value[j];
+    		value[j]^=value[i];
+    		value[i]^=value[j];
+    	}
+    	return value;
+    }
+    public static String reverse(String value){
+    	int l=value.length();
+    	char[] cs=new char[l];
+    	value.getChars(0, l, cs, 0);
+    	return new String(reverse(cs));
+    }
+    public static long reverseBits(long value){
+    	long result=0;
+    	for(int i=0;value!=0;i++){
+    		result|=(value&1)<<(63-i);
+    		value>>>=1;
+    	}
+    	return result;
+    }
+    public static int reverseBits(int value){
+    	int result=0;
+    	for(int i=0;value!=0;i++){
+    		result|=(value&1)<<(63-i);
+    		value>>>=1;
+    	}
+    	return result;
+    }
+    public static byte reverseBits(byte value){
+    	byte result=0;
+    	for(int i=0;value!=0;i++){
+    		result|=(value&1)<<(63-i);
+    		value>>>=1;
+    	}
+    	return result;
+    }
     /**
      * 得到JAVA进程号
      * 以使用这个脚本启动（java -Dpid=$$ -jar /Applications/bsh-2.0b4.jar），把JAVA进程号填进System.properties
@@ -1666,6 +1783,7 @@ public class Help {
     	}
     	return Integer.parseInt(pid);
     }
+    
 	/**
 	 * 获得参数的所有属性并格式化成字符串
 	 * 不要试图用这个方法重写类的toString()方法，这个方法仅用于测试时方便把对象字符串化输出到控制台。
